@@ -20,12 +20,13 @@ Follow these steps in order. Do not combine or skip.
 2. Scope check — split into multiple tasks now if the ask is too large.
 3. Ask clarifying questions, one at a time. Prefer multiple choice.
 4. Propose 2–3 approaches. Each with explicit tradeoffs and unknowns.
-5. Present the design in sections. Get per-section approval.
-6. Identify invariants (hard constraints) and principles (soft guidance).
-7. Decide TDD — yes or no, with reason. Use `up:test-driven-development`'s applicability rule.
-8. Write to task file — `## Design`, `### Invariants`, `### Principles`.
-9. Self-review for placeholders, contradictions, scope, ambiguity. Fix inline.
-10. Wait for user approval before invoking `up:plan`.
+5. Backwards-compat check — flag anything that could break already-running or already-used systems. Ask the user how to resolve before proceeding.
+6. Present the design in sections. Get per-section approval.
+7. Identify invariants (hard constraints) and principles (soft guidance).
+8. Decide TDD — yes or no, with reason. Use `up:test-driven-development`'s applicability rule.
+9. Write to task file — `## Design`, `### Invariants`, `### Principles`.
+10. Self-review for placeholders, contradictions, scope, ambiguity. Fix inline.
+11. Wait for user approval before invoking `up:plan`.
 </required>
 
 ## Scope check — split before planning
@@ -73,6 +74,24 @@ Option C: Postgres-backed counter with short TTL.
 
 Recommendation: B for now, revisit when we outgrow it. The redis latency unknown (A) and write-load unknown (C) both need measurement work before committing, and B is cheap to replace."
 </good-example>
+
+## Backwards compatibility — flag breaks loudly
+
+<required>
+Before presenting the design, enumerate anything in the chosen approach that could break a system already in use: API shape changes, schema migrations, renamed config keys, removed commands, on-disk format changes, changes to outputs that other code/tools consume, behavioral changes to stable endpoints. Surface each one with its blast radius and ask the user how to resolve: deprecate with shim, hard break with migration, version the new behavior, or revise the approach.
+</required>
+
+<good-example>
+"Backwards-compat risks:
+- `GET /api/v1/users` response shape changes — field `name` splits into `first_name`/`last_name`. Any existing client expecting `name` breaks. Options: (a) return both until v2, (b) hard-break with a migration note, (c) ship as `/api/v2/users` and leave v1 alone. Which?
+- Config key `log_level` renamed to `logging.level`. Running deployments on old configs will silently fall through to the default. Options: (a) read both for one release, warn on old, (b) fail loud on old key. Which?"
+</good-example>
+
+<bad-example>
+Agent designs a schema change without flagging it. Execute runs the migration. Production service that still reads the old column 500s. Root cause: design never surfaced the break.
+</bad-example>
+
+If the task is greenfield (no existing consumers), say so in one line and move on. Don't invent risks.
 
 ## Identifying invariants and principles
 

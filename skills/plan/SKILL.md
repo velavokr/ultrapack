@@ -40,9 +40,10 @@ Fill `## Plan` in `docs/tasks/<slug>.md`. Do not create a separate plan file.
 5. Write test strategy (per task's TDD decision).
 6. Write order + dependencies, open questions, risks, rollback.
 7. Add snippets only for the single most critical component per phase.
-8. Self-review inline (placeholders, consistency, invariants, spec coverage).
-9. Scope-creep / simpler-way check — see below. This is the final step before handoff.
-10. Present the plan to the user. On approval, invoke `up:execute`.
+8. Backwards-compat check — restate Design's compat risks in concrete plan terms.
+9. Self-review inline (placeholders, consistency, invariants, spec coverage).
+10. Scope-creep / simpler-way check — see below. This is the final step before handoff.
+11. Present the plan to the user. On approval, invoke `up:execute`.
 </required>
 
 ## Required contents
@@ -99,6 +100,22 @@ Approach: <2-3 sentences>
 </required>
 
 Fix issues inline. No re-review loop.
+
+## Backwards-compat check — restate the design's risks in plan terms
+
+<required>
+Design should already have surfaced backwards-compat risks. In the plan, restate each one with its concrete phase and the mitigation step. If you discover a new break the Design missed (schema rename in phase 2, config key no longer read, output format drift), stop planning and go back to the user — don't smuggle it in.
+</required>
+
+<good-example>
+"Phase 3 renames `log_level` → `logging.level`. Per Design decision, Phase 3 also adds a one-release compat read of the old key with a deprecation warning. Removal is out of scope for this task."
+</good-example>
+
+<bad-example>
+Plan includes a schema migration with no mention of the compat strategy. Execute runs the migration; the old service version in prod breaks on the next deploy.
+</bad-example>
+
+If the task is greenfield, skip this check explicitly in one line.
 
 ## Final check — scope creep, elegance, simpler way
 

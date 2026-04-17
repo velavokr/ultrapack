@@ -64,11 +64,34 @@ For every finding:
 4. Decide: implement, push back with technical reasoning, or escalate to the user.
 </required>
 
-### 4. Apply fixes
+### 4. Announce the plan before editing
+
+<required>
+Before any fix goes in, tell the user what you decided for each finding. One line per finding:
+- what the reviewer said,
+- your verdict (fix / push back / defer),
+- if fixing: the exact change you are about to make.
+
+This is a short summary, not a negotiation. The user can interject. Then apply the fixes.
+</required>
+
+<bad-example>
+"Evaluating reviewer findings fairly." *(then a flurry of edits with no explanation)*
+</bad-example>
+
+<good-example>
+"Reviewer findings:
+- Important #1: reviewer tool list missing `Bash`. Verdict: fix. Editing Design section of task file.
+- Important #2: try.md and step-back.md missing frontmatter. Verdict: fix. Adding frontmatter to both.
+
+Applying now."
+</good-example>
+
+### 5. Apply fixes
 
 Fix Critical and Important issues. Commit each as its own logical unit. If fixes are substantial, re-dispatch the reviewer on the new diff.
 
-### 5. Write the `## Conclusion`
+### 6. Write the `## Conclusion`
 
 ```markdown
 ## Conclusion

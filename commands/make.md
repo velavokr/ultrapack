@@ -99,6 +99,8 @@ Invoke `up:verify`. On failure: `up:verify` describes how each failure *should* 
 
 Status → `reviewing`. Invoke `up:review`. It dispatches `up:reviewer`, processes findings, fills `## Conclusion`. Status → `done`.
 
+Once the task is concluded as `done`, run the docs-refresh check (see below).
+
 **Review is never skipped**, regardless of size.
 
 ### 11. Finish
@@ -109,6 +111,27 @@ Present options to the user:
 - Move on
 
 Execute only after the user chooses.
+
+## After task is done — docs refresh
+
+Run this once, after Review concludes the task as `done` (not after every stage). Scan the project docs and update them if the work surfaced something they should reflect. Cheap, light-touch; not a full doc pass.
+
+Files to scan:
+- `CLAUDE.md` (project-wide agent guidance)
+- `README.md`
+- `docs/**/*.md` (project documentation, excluding the task file itself and archived tasks)
+
+What to look for:
+- New conventions, invariants, or principles that should be global → update `CLAUDE.md`
+- New components, commands, or features the README should mention
+- Stale content contradicted by the stage's work → delete or correct
+- Pointers to the task file if future contributors would benefit
+
+Rules:
+- If nothing needs updating: say so in one line and move on. Do not invent edits.
+- If updates are needed: make them directly, then summarize what changed in 1-3 lines (e.g. "README: fixed install instructions; CLAUDE.md: no change"). Do not prompt for approval first. Do not produce a detailed diff — the user will git-diff if they want.
+- Follow `up:document`: lead with why, lists over tables, no aspirational content, kill stale content.
+- Do not duplicate content across task file and project docs — pick one home per fact.
 
 ## Stop conditions
 

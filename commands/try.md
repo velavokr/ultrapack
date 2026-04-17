@@ -1,3 +1,7 @@
+---
+description: Manually test the latest change with one positive and one negative case. Goal is speed — shortest path to confidence.
+---
+
 Manually test the latest change. Goal is speed — shortest path to confidence.
 
 Steps:

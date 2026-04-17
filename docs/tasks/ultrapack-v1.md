@@ -1,6 +1,6 @@
 # Ultrapack v1
 
-**Status:** executing
+**Status:** done
 **Branch:** main
 **Worktree:** none
 
@@ -121,7 +121,7 @@ Invocations: `/up:<name>`.
 All three dispatched with minimal context. None see the full session history.
 
 - **explorer** (Haiku 4.5). Tools: Glob, Grep, Read, Bash (readonly). Reads the *current codebase*. Traces execution paths, maps call graphs, returns 3–5 essential files with file:line references. No web, no writes.
-- **reviewer** (Sonnet 4.6). Tools: Glob, Grep, Read. Single dispatch. Reads diff + plan + invariants from the task file, but never the rationale behind changes. First checks plan alignment (flags the plan if needed), then confidence-filtered code review (report only issues at confidence ≥ 80) with severity tiers (Critical / Important). Per issue: file:line, 1-line fix suggestion. Final verdict: merge-ready yes/no.
+- **reviewer** (Sonnet 4.6). Tools: Glob, Grep, Read, Bash (readonly). Single dispatch. Reads diff + plan + invariants from the task file, but never the rationale behind changes. First checks plan alignment (flags the plan if needed), then confidence-filtered code review (report only issues at confidence ≥ 80) with severity tiers (Critical / Important). Per issue: file:line, 1-line fix suggestion. Final verdict: merge-ready yes/no.
 - **researcher** (Sonnet 4.6). Tools: WebSearch, WebFetch, Context7, Glob, Grep, Read, Bash (readonly). General-purpose. Decomposes a query and systematically investigates. Output shape depends on the query — not locked to SOTA/ML/literature. Examples: "what's the best X library for Y?", "how do other projects handle Z?", "what's SOTA in W for our project?".
 
 ### `/up:make` flow
@@ -303,4 +303,28 @@ Each phase is a single commit. `git revert` per phase to back out cleanly. Symli
 
 ## Conclusion
 
-_Empty until `up:review` runs._
+Outcome: ultrapack v1 is installed and loaded as the `up` plugin via `~/.claude/plugin-marketplace/up` (symlink to this repo). `/up:make`, `/up:reflect`, `/up:handoff`, `/up:try`, `/up:step-back` are discoverable. Skills (`design`, `plan`, `execute`, `verify`, `review`, `debug`, `test-driven-development`, `git-worktrees`, `document`, `data-engineering`, `ml-experiments`) and agents (`explorer` on Haiku 4.5, `reviewer` + `researcher` on Sonnet 4.6) load. Superpowers and feature-dev remain in the tree as read-only reference.
+
+Plan adherence: mostly clean. Notable deviations, all recorded here rather than inline:
+- Skill content was heavily rewritten mid-review on user feedback (reduced markdown, more pseudo-XML, informative section headers, two-roles review asymmetry, forbidden fallbacks in execute, plan-intro rewrite, scope-split moved to design).
+- Handoff skill reworked from auto-append to draft-then-ask (append to current task Conclusion or create `docs/tasks/handoff-<slug>.md`).
+- Review skill gained an "announce plan before editing" step.
+- `make.md` initially got a per-stage docs-refresh, then corrected to run once after Review concludes the task.
+- Design + plan skills picked up a backwards-compat check late in review.
+
+Invariants: each verified by reading the final files:
+- Agents dispatched without session history — reviewer + researcher + explorer prompts all instruct explicit working directory + task file path, no history pass-through (`agents/reviewer.md`, `skills/review/SKILL.md`).
+- Task file is single source of truth — all six process skills read/write `docs/tasks/<slug>.md`, no sidecar plan/spec files.
+- No auto-merge / auto-push — `/up:make` terminal step defers to user; `up:review` only presents options.
+- `up:` namespacing verified post-install (`/reload-plugins` shows up:* skills/commands).
+
+Review findings (dispatched `up:reviewer` at d86bd96..eebdcb6, merge-ready verdict, no Critical):
+- Important #1 (Design's reviewer tool list missing `Bash (readonly)` vs actual `agents/reviewer.md`) — resolved, task file Design section updated.
+- Important #2 (`commands/try.md` and `commands/step-back.md` missing YAML frontmatter description) — resolved, both files now have frontmatter matching the other commands.
+
+Future work:
+- Dogfood `/up:make` on a real feature task — Justification: `## Test strategy` explicitly named "end-to-end dogfooding" as the primary verification; ultrapack-v1 itself is the scaffolding task, not a representative feature.
+- Revisit reviewer token budget after 3–5 real reviews — Justification: Open question from plan P5.2 ("feature-dev's reviewer runs on Sonnet in parallel with 3 lenses; single-dispatch on Sonnet 4.6 may need tightening"). Can't tune without empirical data.
+- Reflect skill routing review — Justification: new command, untested in practice; its CLAUDE.md / memory / docs routing heuristics will need real-session data to calibrate.
+
+Verified by: install smoke test (plugins load post-`/reload-plugins`), reviewer verdict (merge-ready after Important fixes), manual file reads to check every invariant claim above.
