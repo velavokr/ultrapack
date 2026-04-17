@@ -77,4 +77,4 @@ Removed in this release: `up:data-engineering`, `up:ml-experiments` — moved to
 
 ## License
 
-MIT
+WTFPL — see [license.txt](license.txt).
