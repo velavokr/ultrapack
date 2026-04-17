@@ -132,6 +132,10 @@ If you used any of those as the basis of a pass verdict: back to Phase 1.
 - Skip verify to get to review faster
 - Trust a prior session's verdict — re-run
 
+## Hands-off mode
+
+See `up:handsoff` for the full contract. Stage-specific delta: verify's behavior is unchanged — the pass → review / fail → execute loop already runs without user confirmation. Infeasible smoke tests (infra unavailable, etc.) are logged under `### Deferred (needs user input)` so the user knows what wasn't verified end-to-end. Never fabricate success to skip a deferred entry.
+
 ## Terminal state
 
 Verify summary written to task file. Pass → invoke `up:ureview`. Fail → invoke `up:uexecute` with failure notes describing intended behavior.

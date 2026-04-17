@@ -56,6 +56,7 @@ Process skills (u-prefixed to dodge Claude Code built-ins):
 Discipline skills:
 - `up:test-driven-development` — RED → GREEN → REFACTOR, only when the task qualifies.
 - `up:git-worktrees` — Smart directory selection, safety verification.
+- `up:handsoff` — Shared contract for hands-off mode (activated via `/up:make handsoff <description>`): safety principles, decision log, no-default rule, end-of-task summary. Referenced by `/up:make` and every process skill.
 
 Removed in this release: `up:data-engineering`, `up:ml-experiments` — moved to user-level skills (they weren't spec-driven-dev scoped).
 

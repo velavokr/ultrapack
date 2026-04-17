@@ -183,7 +183,13 @@ Agent edits `## Plan` inline with `<!-- deviation: ... -->` comments. Reviewer n
 - Verify would obviously fail even after you finish
 - You're about to invent a fallback / default / catch-all
 
-Don't force through. Ask.
+Don't force through. Ask. This list applies in both interactive and hands-off modes — it defines the "genuinely impossible without user input" exception. Log each such stop under `## Conclusion → ### Deferred (needs user input)` in hands-off mode.
+
+## Hands-off mode
+
+See `up:handsoff` for the full contract, including the safety principles (worktree-first, no destructive git ops, no push to remote, additive-over-subtractive edits). Stage-specific delta: execute's own behavior is unchanged — the existing fail-fast rules and "when to stop and ask" list above *are* the hands-off handling. Each such stop is logged under `### Deferred (needs user input)` with enough context for the user to resume.
+
+Never invent a default to keep moving. Conservative = fewer assumptions = stop and log.
 
 ## Never
 

@@ -197,11 +197,16 @@ Phases are sequential. Phase 1 is independent of phases 2-3. Phase 2 introduces 
 - scope: bundled (piece 1 skill-move + piece 2 hands-off mode) into one task — user wrote them as one
 - truncated point 3 in args: treated as empty, flagged here as deviation from input completeness
 - size: Medium — two related pieces, full Design→Plan→Execute→Verify→Review flow
-- branch: `main` — conservative default per CLAUDE.md ("Often users want to work directly on main")
-- worktree: none — no parallel work, simple scope
+- branch: `main` — conservative default per CLAUDE.md ("Often users want to work directly on main") [SUPERSEDED — see Deviations below]
+- worktree: none — no parallel work, simple scope [SUPERSEDED — see Deviations below]
 - TDD: no — doc-only plugin per repo CLAUDE.md
 - uplan: plan auto-approved (hands-off)
 - keyword spelling: accept only literal `handsoff` (user's exact word); misspellings fall through to interactive
+
+### Deviations from plan
+- mid-execute, user corrected: hands-off should default to the *safest reversible* path, not the simplest. Worktree-first, not worktree-none. Propagated via a new `up:handsoff` shared skill (see below); Design/Plan text above left as historical record.
+- mid-execute, user asked to extract hands-off contract into a shared skill to eliminate duplication across udesign/uplan/uexecute/uverify/ureview/make. Created `plugins/up/skills/handsoff/SKILL.md` (new skill `up:handsoff`); trimmed each child skill's `## Hands-off mode` section to a reference + stage-specific delta. This is a structural deviation — recorded here; plan kept as-is. Phase 3 scope expanded accordingly.
+- this task itself was executed on `main` with no worktree. Violates the new safety rule being documented. Accepted because: (a) the work is doc-only / low-blast-radius, (b) the rule didn't exist when the branch was chosen, (c) retcon would require rewriting already-shipped commits. Noted so future hands-off runs observe the rule.
 
 ### Deferred (needs user input)
 <empty — populated if any genuinely-impossible-without-user decisions were hit>

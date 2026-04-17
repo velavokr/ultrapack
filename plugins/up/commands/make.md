@@ -95,7 +95,7 @@ After Design (or immediately for trivial/small tasks), decide:
 
 **Interactive mode:** always confirm with the user. Often they want to work directly on main — that's fine.
 
-**Hands-off mode:** default to branch = `main`, worktree = none. Do not suggest a worktree. Log the choice to `## Conclusion → ### Hands-off decisions`. If the task is genuinely long-running (clear from the Design), log that to `### Deferred (needs user input)` with "- worktree: task looks long-running but hands-off defaulted to main — user may want to move this to a worktree" and proceed.
+**Hands-off mode:** default to **the safest reversible option** — always a dedicated branch + worktree via `up:git-worktrees`, never direct edits to `main`/`master`. Rationale: hands-off means the user won't approve each step, so the blast radius of any mistake must be contained to a branch the user can discard. Log the branch name and worktree path under `## Conclusion → ### Hands-off decisions`. The only exception: if `up:git-worktrees` itself fails (e.g. no gitignored worktree path available), log the failure under `### Deferred (needs user input)` and stop — do not silently fall back to working on `main`.
 
 If a branch is created, update the task file's `**Branch:**` and `**Worktree:**` headers.
 
@@ -166,34 +166,16 @@ Stop and ask the user when:
 
 - Never skip Review (both modes)
 - Never auto-merge or auto-push — the user chooses at step 11 (both modes)
-- Never create a worktree without confirming (overridden in hands-off: default is no worktree, never auto-create one)
+- Never create a worktree without confirming in interactive mode. Hands-off auto-creates a worktree as the safe default (see `up:handsoff`)
+- Never edit `main` / `master` directly in hands-off (see `up:handsoff` safety principles)
 - Keep the task file as the single source of truth — each stage reads it, each stage writes to it
 - External spec / design docs (e.g. `docs/superpowers/specs/*.md`) are read-only during execute. If a stage finds the spec is wrong, surface it to the user — don't mutate it silently
 - Don't assume prior session memory — the next agent may be a fresh context reading only the task file
-- In hands-off, never invent a default for an ambiguous argument. If a choice has no obvious conservative default and the user didn't specify, log under `### Deferred (needs user input)` in Conclusion and skip that work — do not guess
+- In hands-off, never invent a default for an ambiguous argument — see `up:handsoff` no-default rule
 
 ## Hands-off mode
 
-Activated by prefixing `/up:make` arguments with the literal token `handsoff`. Goal: run the full workflow with the fewest possible user prompts after Design, while making the least assumptions.
-
-**Propagation.** The task-file `**Mode:**` header is the single source of truth. Every child skill reads it. No env var, no config flag, no parameter passing through the Skill tool.
-
-**What hands-off suppresses:**
-- Confirmation prompts for size classification, branch, worktree, and TDD (step 4 + step 6).
-- The plan-approval gate in `up:uplan` (step 7 auto-proceeds to execute).
-- The "should I fix this?" prompt in `up:ureview` for high-confidence actionable findings (they're fixed directly).
-
-**What hands-off preserves:**
-- The Design stage's dialogue (clarifying questions still allowed when genuinely blocking).
-- `up:uexecute`'s fail-fast rules and stop-and-ask list (ambiguous plan, missing dep, would-invent-fallback). These *are* the "genuinely impossible without user input" exception.
-- The verify loop (fail → execute, pass → review).
-- The review stage's existence — Review is never skipped in any mode.
-
-**Decision log.** Every auto-choice that would normally have prompted the user is appended to `## Conclusion → ### Hands-off decisions` as `- <stage>: <choice> — <rationale>`. At step 11 this list is printed to the user with "Here's what I did to make it hands-off. Want to change anything?" — giving them one review point at the end instead of many prompts along the way.
-
-**Deferred log.** When a choice has no conservative default (e.g. a required argument with no sensible fallback), do not guess. Append to `### Deferred (needs user input)` with what was skipped and why. The task completes with those items open for the user's attention.
-
-**No-default rule.** Conservative ≠ inventive. In hands-off, "conservative" means *fewer assumptions*, not *make up a safe-looking placeholder*. If the plan or design is silent on a required value and no obvious conservative default exists (e.g. the rigid path of "same as before" or "as the user wrote it"), skip it and defer.
+Activated by prefixing `/up:make` arguments with the literal token `handsoff`. The full contract — safety principles (worktree-first, reversible-first, no destructive ops, no push), decision log format, deferred log, no-default rule, end-of-task summary — lives in `up:handsoff`. Read that skill once when the task file's `**Mode:**` header is `hands-off`; the references in step 4, step 6, step 7, step 11 above are the stage-specific touches on top of it.
 
 ## Terminal state
 
