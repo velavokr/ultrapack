@@ -26,7 +26,7 @@ Follow these steps in order. Do not combine or skip.
 8. Decide TDD — yes or no, with reason. Use `up:test-driven-development`'s applicability rule.
 9. Write to task file — `## Design`, `### Invariants`, `### Principles`.
 10. Self-review for placeholders, contradictions, scope, ambiguity. Fix inline.
-11. Wait for user approval before invoking `up:plan`.
+11. Wait for user approval before invoking `up:uplan`.
 </required>
 
 ## Scope check — split before planning
@@ -147,4 +147,4 @@ TDD: no (reason: one-off migration script; no reusable logic)
 
 ## Terminal state
 
-User has approved the Design section → invoke `up:plan`. Do not write code. Do not invoke any other skill.
+User has approved the Design section → invoke `up:uplan`. Do not write code. Do not invoke any other skill.

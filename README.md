@@ -42,7 +42,7 @@ To pick up edits mid-session (the symlink means files are live on disk), just ru
 ### Skills (11)
 
 - `up:design` — Brainstorm requirements and approach; populate Design + Invariants + Principles.
-- `up:plan` — Lean plan: files, line numbers, class/method/interface names, invariants, test strategy.
+- `up:uplan` — Lean plan: files, line numbers, class/method/interface names, invariants, test strategy.
 - `up:execute` — Implement the plan, incremental commits, dispatch `up:explorer` when needed.
 - `up:verify` — Checklist of what should and shouldn't hold, smoke test, loop back on failure.
 - `up:review` — Dispatch `up:reviewer`, fill Conclusion with outcomes and deviations.

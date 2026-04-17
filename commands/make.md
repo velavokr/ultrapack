@@ -22,7 +22,7 @@ Before creating a new task file, check if `docs/tasks/<slug>.md` already exists.
 
 - **Exists:** read `**Status:**` from the header. Resume from the next stage:
   - `design` → continue design
-  - `planning` → run `up:plan`
+  - `planning` → run `up:uplan`
   - `executing` → run `up:execute`
   - `reviewing` → run `up:review`
   - `done` → ask the user what they want to do (start a follow-up, re-open, view conclusion)
@@ -52,7 +52,7 @@ Template:
 <empty>
 
 ## Plan
-<empty — filled by up:plan>
+<empty — filled by up:uplan>
 
 ## Verify
 <empty — filled by up:verify>
@@ -88,7 +88,7 @@ If a branch is created, update the task file's `**Branch:**` and `**Worktree:**`
 
 ### 7. Plan stage (unless skipped)
 
-Invoke `up:plan`. It populates `## Plan`. Status → `executing`.
+Invoke `up:uplan`. It populates `## Plan`. Status → `executing`.
 
 ### 8. Execute stage
 

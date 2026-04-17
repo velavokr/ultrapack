@@ -1,5 +1,5 @@
 ---
-name: plan
+name: uplan
 description: Use after design to turn a validated spec into a lean implementation plan. Outputs the `## Plan` section of the task file — files, line numbers, class/method names, invariants, test strategy, order. Ends with a scope-creep / simpler-way check.
 ---
 

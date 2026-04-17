@@ -38,7 +38,7 @@ For each phase in the plan:
    - `DONE` → continue to step 4.
    - `DONE_WITH_CONCERNS` → read the concerns. Resolve or record them, then continue.
    - `NEEDS_CONTEXT` → supply missing context, re-dispatch.
-   - `BLOCKED` → diagnose. If the plan is wrong, invoke `up:plan`. If context-only, re-dispatch. Do not retry identically.
+   - `BLOCKED` → diagnose. If the plan is wrong, invoke `up:uplan`. If context-only, re-dispatch. Do not retry identically.
 4. **Plan-diff check.** Read the phase's commit (`git show <sha>`). For every plan bullet in this phase: is it reflected in the diff? For every change in the diff: is it covered by a bullet, or by a deviation the implementer reported? Any unreported structural gap → record as a deviation, or re-dispatch with correction.
 5. **Consistency pass.** If the implementer tightened a rule, renamed a symbol, or changed a pattern in one spot, grep the diff and the wider repo for the same pattern. Apply the same change everywhere. If the implementer already did this (their self-review requires it), confirm and move on. If they missed siblings, either re-dispatch or fix inline and amend.
 6. Mark the phase `completed`.
@@ -159,7 +159,7 @@ When a deviation happens:
 1. Do not edit the Plan inline. The plan is the contract that was approved; it stays as-is for the review.
 2. Record the deviation in the task file's `## Conclusion` under a `### Deviations from plan` subsection (create if missing). Format: `- <what changed> — <why>`.
 3. If the deviation is minor (renamed a helper, swapped two steps) — continue execution.
-4. If the deviation is structural enough that later phases in the plan no longer apply — stop executing. Invoke `up:plan` with enough context (what was done, what no longer applies, what new reality is). Let the planner skill update the plan before resuming.
+4. If the deviation is structural enough that later phases in the plan no longer apply — stop executing. Invoke `up:uplan` with enough context (what was done, what no longer applies, what new reality is). Let the planner skill update the plan before resuming.
 </required>
 
 <good-example>
