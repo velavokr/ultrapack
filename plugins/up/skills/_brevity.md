@@ -18,6 +18,20 @@ Applies to anything that outlives the conversation: code, comments, docstrings, 
 
    - Negative: `// do X (NOT Y)` — `Y` was the user's last critique, already removed from the code; the comment now refers to nothing.
    - Negative: agent description "…Dispatched per-phase from up:uexecute. Fresh context, never sees session history or later phases. Sonnet 4.6." — dispatch mechanics, session semantics, and model are all bleed; the description should say what the agent *does*.
+   - Negative: task file narrating the dialogue to a reader:
+
+     <bad>
+     (Both resolved in design dialogue; kept here as record.)
+     - UK1 — Pre-seed `### Assumptions` and `### Unknowns` in the `/up:make` template. Resolved: yes.
+     - UK2 — Conclusion gets dedicated `### Assumptions check` and `### Unknowns outcome` subsections. Resolved: yes, dedicated.
+     </bad>
+
+     <good>
+     - UK1 — Pre-seed `### Assumptions` and `### Unknowns` in the `/up:make` template. Resolved: yes.
+     - UK2 — Conclusion gets dedicated `### Assumptions check` and `### Unknowns outcome` subsections. Resolved: yes, dedicated.
+     </good>
+
+     Why it's bleed: the parenthetical addresses a reader ("kept here as record") and references "the design dialogue" — a conversation that, from the file's point of view, never happened. The file is the record; it doesn't need to explain why it's the record. A stranger reading six months later sees the two resolved items and understands them on their own; the parenthetical only makes sense if you were in the chat where they were being debated.
    - Positive: `// integer overflow here caused the 2026-02 billing incident` — timeless reason, useful in six months.
    - Positive: agent description "Implement one phase of an approved plan — code, tests, commit." — stands alone, describes purpose.
 
