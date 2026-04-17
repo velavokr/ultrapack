@@ -1,77 +1,108 @@
 ---
 name: verify
-description: Use after execute to confirm the change actually works. Builds a checklist of what should and shouldn't hold, runs /up:try-style checks, does a manual smoke test, loops back to execute on failure.
+description: Use after execute to confirm the change actually works end-to-end. Builds a positive + negative + invariant checklist, runs each check freshly, does a manual smoke test, loops back to execute on any failure. Does not write to the task file.
 ---
 
 # Verify
 
-Evidence before claims, always. If you haven't run the check in this message, you cannot claim it passes.
+Confirm the change actually works — not "looks right", not "tests probably pass", but *verified by running the thing in this message*. Verify does not write to the task file; its verdict either advances the workflow to `up:review` or bounces it back to `up:execute` with remediation notes.
 
-## Output
+## Phase 1 — Build the checklist (positive, negative, invariant)
 
-Verify does **not** write to the task file directly. Its output is:
-- A pass verdict (moves the workflow to `up:review`)
-- Or a fail verdict with a list of what failed and how each *should have* worked (loops back to `up:execute`)
+The checklist enumerates every behavior you'll actually run. Built from the Plan, Invariants, and Design, not imagined.
 
-## Process
+- Positive checks: "POST /items returns 201 for a valid payload." "`Dataset.load()` reads the file and returns the expected schema." Specific inputs → specific expected outputs.
+- Negative checks: "POST /items returns 400 for missing fields." "`Dataset.load()` raises on a missing file." Things that must still fail correctly.
+- Invariant checks: one check per Design invariant. "`Dataset` does not import from `training/`" → a grep that must return nothing.
 
-### 1. Build the checklist
+The checklist lives in-session. It is not written to the task file.
 
-From the Plan + Invariants + Design, enumerate:
+<good-example>
+```
+Positive:
+- POST /items {valid} → 201, body contains new id
+- Dataset.load("good.csv") → DataFrame with 3 columns
 
-- **Should-hold checks** (positive): specific behaviors that must now work. "POST /items returns 201 for a valid payload." "`Dataset.load()` reads the file and returns the expected schema."
-- **Shouldn't-hold checks** (negative): things that must still fail or be rejected. "`Dataset.load()` raises on a missing file." "Invariant: `Dataset` does not import `training/`."
-- **Invariant checks**: every invariant from Design has a corresponding check.
+Negative:
+- POST /items {missing name} → 400, "name is required"
+- Dataset.load("nope.csv") → FileNotFoundError
 
-The checklist lives in-session, not in the task file.
+Invariants:
+- grep "from training" src/dataset/ → empty
+- all DB writes go through transaction() helper → manual trace
+```
+</good-example>
 
-### 2. Run each check
+<bad-example>
+"I'll test the happy path." Too vague. No negatives, no invariants, no specific inputs or expected outputs.
+</bad-example>
 
-For each item:
-- Use `/up:try`-style minimal verification. Direct command > scripted harness.
-- One-off scripts go in `tmp/` (project-local, gitignored). Naming is agent's choice; clean up after.
-- Capture the actual output. "Looks right" is not evidence.
-- Decide pass/fail based on what you saw, not what you expected.
+## Phase 2 — Run each check freshly, in this message
 
-### 3. Manual smoke test
+Evidence before claims. If you haven't run it in this message, you cannot claim it passes.
 
-Run the shortest end-to-end path that exercises the change:
+- Use `/up:try`-style minimal verification — the direct command, no harness
+- One-off scripts go in project-local `tmp/` (gitignored); clean up after
+- Capture *actual* output. "Looks right" is not evidence.
+- Decide pass/fail on what you saw, not what you expected
+
+If a check passed in an earlier session or an earlier message — re-run it now. State does drift.
+
+## Phase 3 — Manual smoke test end-to-end
+
+Run the shortest full path that exercises the change in its real shape:
+
 - CLI change → invoke the command with representative input
 - API change → `curl` against a running server
-- UI change → open in browser, click through the feature
+- UI change → open in a browser, click through the feature
 - ML change → run a tiny training step or inference call
 
-If you can't run the smoke test (e.g. need infra that's not available), say so explicitly. Don't fabricate success.
+If you can't run the smoke test (e.g. infra unavailable), say so explicitly. Do not fabricate success. Do not substitute a unit test for the smoke test.
 
-### 4. Consolidate
+## Phase 4 — Consolidate: pass loops to review, fail loops to execute
 
-- **All passes** → declare verify passed. Terminal state: invoke `up:review`.
-- **Any fails** → for each failure, describe how it *should have* worked conceptually. Loop back to `up:execute` with these notes. Do not move forward.
+- All checks passed → declare verify passed. Invoke `up:review`.
+- Any check failed → for each failure, describe how it *should have* worked conceptually (not "add the missing line" — the behavior it was supposed to exhibit). Loop back to `up:execute` with these notes. Do not move forward.
 
-## Future Work vs. incomplete work
+<good-example>
+Failure note: "POST /items returned 500 instead of 400 for a missing `name`. The validation layer should reject the payload with a 400 and a 'name is required' message before the handler runs."
+</good-example>
 
-When something fails or is ambiguous, you may be tempted to move it to `## Conclusion → Future Work`. Rules:
+<bad-example>
+Failure note: "Test failed, fix it." Tells execute nothing about what the behavior should be.
+</bad-example>
 
-- **In-scope = do it.** If the plan mandated it, it's not future work. Complete it or explicitly rescope with user consent.
-- **Justification required.** Moving an item to Future Work needs a pointer to: (a) a Design-scope line that excludes it, or (b) a new fact discovered mid-execution that changes scope. No hand-waving.
-- **The workflow is not a slacking loophole.** "I'll do it later" without justification = keep working.
+## Future Work vs. incomplete work — the slacking-loophole rule
+
+When a check fails or surfaces ambiguity, do not move it to `## Conclusion → Future Work` unless you have justification.
+
+<required>
+- In-scope = do it. If the plan mandated it, it's not future work. Complete it, or explicitly rescope with user consent.
+- Justification required. Future Work needs a pointer to (a) a Design-scope line that excludes it, or (b) a new fact discovered mid-execution that changes scope. Hand-waving doesn't count.
+- Out-of-scope but related? Fine — add to Future Work with justification, keep verifying the rest.
+</required>
+
+## Red flags — STOP, do not claim pass
+
+<system-reminder>
+These phrases mean verify did not actually happen:
+- "Just this once"
+- "I'm confident it works"
+- "Linter passed" (linter is not runtime)
+- "Unit tests pass" (unit tests are not smoke tests)
+- "Agent said done" (you haven't verified the diff yourself)
+- "Should work", "probably works", "looks correct"
+</system-reminder>
+
+If you used any of those as the basis of a pass verdict: back to Phase 1.
 
 ## Never
 
 - Claim pass without running the check in this message
-- Use "should work", "probably works", "looks correct" as verdicts
-- Trust an agent's self-report without verifying the diff
 - Declare pass when any check failed
 - Skip verify to get to review faster
-
-## Red flags — STOP
-
-- "Just this once"
-- "I'm confident"
-- "Linter passed" (linter ≠ runtime)
-- "Tests pass" (tests ≠ smoke test)
-- "Agent said done" (verify the diff yourself)
+- Trust a prior session's verdict — re-run
 
 ## Terminal state
 
-Pass → `up:review`. Fail → `up:execute` with remediation notes.
+Pass → invoke `up:review`. Fail → invoke `up:execute` with failure notes describing intended behavior.

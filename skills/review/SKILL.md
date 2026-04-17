@@ -1,104 +1,124 @@
 ---
 name: review
-description: Use after verify passes to get an independent check. Dispatches up:reviewer agent, processes feedback rigorously (no performative agreement), fills the task file's Conclusion.
+description: Use after verify passes to get an independent check on the work. Dispatches up:reviewer (critical, high-confidence filter), processes its findings fairly (no performative agreement, no reflexive acceptance), fills the task file's `## Conclusion`.
 ---
 
 # Review
 
-Review is a process, not a section. It produces the `## Conclusion` section of the task file.
+Review is a process, not just a section. Its end product is the `## Conclusion` section of the task file, filled in based on an independent code review and the work that was done.
 
-## When to review
+## When to invoke
 
 - After `up:verify` passes
 - Before merge to main
 - Before opening a PR
-- Review is **never skipped**, regardless of task size
+- Never skipped, regardless of task size
+
+## Two roles, two attitudes
+
+<reviewer-role>
+The `up:reviewer` subagent is **critical**. It is dispatched with a diff, a plan, and invariants — but not the rationale behind the changes. It looks for violated invariants, plan misalignment, bugs, and risks. Confidence-filtered (≥80). Severity-tiered.
+</reviewer-role>
+
+<dispatcher-role>
+You (the dispatcher) are **fair**. Fair means: take every finding seriously, but verify it against the codebase before acting. Fair is neither reflexive agreement nor reflexive pushback. Fair is: restate → verify → evaluate → decide.
+</dispatcher-role>
+
+The asymmetry is deliberate. A tough reviewer catches more real issues; a fair dispatcher avoids overcorrecting on mistaken calls.
 
 ## Process
 
-### 1. Dispatch up:reviewer
+### 1. Dispatch `up:reviewer`
 
 Get git SHAs:
 ```bash
-BASE_SHA=$(git rev-parse HEAD~<N>)  # N = number of commits in this task's work
+BASE_SHA=$(git merge-base HEAD main)   # or the branch point for this task
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
 Dispatch the `up:reviewer` agent with:
 - Task file path (`docs/tasks/<slug>.md`)
 - `BASE_SHA` and `HEAD_SHA`
-- **Do not pass session history.** The reviewer must not see your rationale — only the Plan, Invariants, and diff.
+- Working directory (explicitly — the agent does not inherit `cwd` reliably)
 
-### 2. Read feedback, don't react
+<system-reminder>
+Do **not** pass session history to the reviewer. The reviewer must not see the rationale behind changes — only the Plan, Invariants, and diff. Independence is the point.
+</system-reminder>
 
-Receive the reviewer's output without immediate reply:
-- **Critical**: fix before proceeding
-- **Important**: fix before merge
-- **Suggestions** (if any): note, don't necessarily implement
+### 2. Read feedback without reacting
 
-### 3. Evaluate each item
+Receive the reviewer's output. Do not immediately reply with fixes or pushback. Classify first:
 
+- Critical: fix before proceeding
+- Important: fix before merge
+- Plan finding: the plan itself may be wrong
+
+### 3. Evaluate each item fairly
+
+<required>
 For every finding:
-1. **Restate** the concern in your own words. If you can't, ask for clarification.
-2. **Verify** against the codebase. Does the issue actually exist as described?
-3. **Evaluate** technically: is the suggested direction correct for *this* codebase?
-4. **Decide**: implement, push back (with reasoning), or escalate to user.
+
+1. Restate in your own words. If you can't restate it, ask the reviewer to clarify — don't guess.
+2. Verify against the codebase. Does the issue actually exist as described? Open the file, read the lines.
+3. Evaluate technically: is the suggested fix right for *this* codebase and the Design?
+4. Decide: implement, push back with technical reasoning, or escalate to the user.
+</required>
 
 ### 4. Apply fixes
 
-Fix Critical and Important issues. Commit each as a separate logical unit. Re-dispatch the reviewer if the changes are substantial.
+Fix Critical and Important issues. Commit each as its own logical unit. If fixes are substantial, re-dispatch the reviewer on the new diff.
 
-### 5. Write the Conclusion
-
-Fill `## Conclusion` in the task file:
+### 5. Write the `## Conclusion`
 
 ```markdown
 ## Conclusion
 
-**Outcome:** <what works now, in one paragraph>
+Outcome: <one paragraph — what works now>
 
-**Plan adherence:** <deviations from the plan and why>
+Plan adherence: <any deviations already recorded during execute, summarized here>
 
-**Invariants:** <each invariant and how it was verified>
+Invariants: <each invariant, and how it was verified>
 
-**Review findings:**
-- Critical: <resolved>
-- Important: <resolved or explicitly deferred>
+Review findings:
+- Critical: <resolved, how>
+- Important: <resolved or explicitly deferred with justification>
 
-**Future work:**
-- <item> — Justification: <Design-scope line excluded this> OR <new fact discovered during execution>
-- (No unjustified items allowed — this is not a dumping ground for incomplete in-scope work.)
+Future work:
+- <item> — Justification: <Design-scope line that excluded this> OR <new fact discovered during execution>
+- (No unjustified items. This section is not a dumping ground for incomplete in-scope work.)
 
-**Verified by:** <smoke tests run, manual checks, reviewer>
+Verified by: <smoke tests run, manual checks, reviewer verdict>
 ```
 
 ## Receiving feedback — rules
 
-**Never:**
-- "You're absolutely right" / "Great catch" / "Thanks"
+<dispatcher-rules>
+Never:
+- "You're absolutely right" / "Great catch" / "Thanks for catching that"
 - Implement blindly without verifying against the codebase
-- Batch fixes without testing each
-- Partial implementation when items may be related — clarify all first
+- Batch fixes without checking each independently
+- Respond partial when multiple findings may be linked — clarify all first
 
-**Do:**
-- Verify against the codebase reality
-- Push back with technical reasoning when wrong
-- Ask for clarification when unclear
-- Fix → show the diff → move on (actions > words)
+Do:
+- Verify against codebase reality before acting
+- Push back with technical reasoning when the reviewer is wrong
+- Ask for clarification when a finding is unclear
+- Show the fix in a diff — actions over words
 
-**Pushback is legitimate when:**
-- Suggestion breaks existing behavior
-- Reviewer lacks full context that only you have
-- Suggestion violates YAGNI (unused feature being "properly implemented")
-- Conflicts with explicit Design/Invariants decisions
+Pushback is legitimate when:
+- The suggestion breaks existing behavior
+- The reviewer lacks context only the Design has (e.g. intentional tradeoff)
+- The suggestion violates YAGNI (over-engineering an unused path)
+- The suggestion conflicts with explicit Design / Invariants decisions
+</dispatcher-rules>
 
 ## Never
 
 - Accept "ready to merge" without evidence
 - Merge with open Critical or Important findings
 - Skip the Conclusion write-up
-- Run review on yourself (use the subagent, preserve independence)
+- Run review on yourself (always use the subagent — preserve independence)
 
 ## Terminal state
 
-Conclusion written, all Critical/Important resolved → present merge/PR/cleanup options. The user chooses; you don't auto-merge.
+Conclusion written, all Critical/Important resolved or explicitly deferred with justification → present merge / PR / cleanup options to the user. The user chooses; you don't auto-merge.
