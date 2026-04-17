@@ -1,0 +1,12 @@
+tmp/
+
+# Upstream reference snapshots — not part of the pack
+superpowers/
+claude-code-plugins/
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
