@@ -1,76 +1,82 @@
 # ultrapack
 
-A lean, opinionated Claude Code skill pack for spec-driven, git-centered development. Internal name: `up`. Invocations always use the `up:` prefix (`up:udesign`, `/up:make`, `up:reviewer`).
+Opinionated Claude Code skill pack for spec-driven, git-centered development.
 
-## Philosophy
+## TL;DR
 
-- **One task, one file.** Every task produces a single markdown file at `docs/tasks/<slug>.md`, evolved through Design → Plan → Conclusion.
-- **Lean plans.** Concrete locations, per-file change bullets, interface signatures. Snippets only where words fail.
-- **Git-centered.** Branch per non-trivial task, worktrees for parallel work, commits are the timeline, task files live in the repo.
+One command:
+
+```
+/up:make fix the flaky login test
+```
+
+Claude drives it through design → plan → execute → verify → review, writing every stage into `docs/tasks/<slug>.md`. The task file is the source of truth — any fresh agent can read it and resume from wherever the last one stopped.
+
+Core ideas:
+- **One task, one file.** `docs/tasks/<slug>.md` evolves through Design → Plan → Verify → Conclusion.
 - **Invariants-first.** Discovered in design, obeyed in plan, verified during review.
 - **Subagent independence.** Reviewers run in fresh contexts, never see change rationale.
-- **TDD where it fits.** Deterministic, reusable code only. Not for training runs, EDA, one-offs, or research.
+- **Per-phase implementation.** Each plan phase dispatched to a fresh `up:implementer`.
 - **Manual testing mandatory.** Agent must run what it built before claiming done.
-- **Minimalistic.** Fewest words, fewest commands, fewest skills that still cover the workflow.
+- **Review is never skipped**, regardless of task size.
 - **Fail fast, fail loud.** No silent fallbacks.
 
 ## Install
 
-Install via a local plugin marketplace symlink.
+Add the repo as a marketplace and install the plugin:
 
-```bash
-git clone https://github.com/<your-user>/ultrapack ~/Documents/ultrapack
-ln -s ~/Documents/ultrapack ~/.claude/plugin-marketplace/up
+```
+/plugin marketplace add btseytlin/ultrapack
+/plugin install up@ultrapack
 ```
 
-Add an entry to `~/.claude/plugin-marketplace/.claude-plugin/marketplace.json`:
+Then `/reload-plugins`. Verify with `/up:make` or by listing skills.
 
-```json
-{
-  "name": "up",
-  "description": "ultrapack — lean, opinionated skill pack for spec-driven, git-centered development",
-  "source": "./up"
-}
-```
+## Design
 
-Then in Claude Code: `/plugin install up@local-plugins` and `/reload-plugins`. Verify with `/up:make` or by listing skills.
+Ultrapack is opinionated scaffolding for how Claude Code should handle non-trivial work. It merges the load-bearing parts of [obra/superpowers](https://github.com/obra/superpowers) and Anthropic's [feature-dev](https://github.com/anthropics/claude-code/tree/main/plugins/feature-dev), drops the rest, freezes the behavior. The result is a small set of skills, commands, and agents that implement one workflow — not a menu of options.
 
-To pick up edits mid-session (the symlink means files are live on disk), just run `/reload-plugins` — no reinstall needed.
+Every task produces exactly one markdown file at `docs/tasks/<slug>.md` with sections Design, Plan, Verify, Conclusion. Each stage is a skill; `/up:make` orchestrates them. If `/up:make` is invoked on a slug whose file already exists, it reads the `Status` header and resumes from the next stage — so a session can crash, be replaced, or be handed off without losing state.
 
-## Contents
+Execution is per-phase subagent dispatch. `up:implementer` gets one phase of the plan, writes code + tests + commit, then returns. `up:uexecute` runs a plan-diff check and consistency sweep between phases. Verification builds a positive + negative + invariant checklist and loops back to execute on any failure. Review is never skipped: `up:reviewer` runs fresh, without session history or change rationale, so its verdict stays independent. The `up:` prefix on everything (`/up:make`, `up:udesign`, `up:reviewer`) keeps the whole surface discoverable at a glance.
 
-### Skills (11)
+## Details
 
-- `up:udesign` — Brainstorm requirements and approach; populate Design + Invariants + Principles.
-- `up:uplan` — Lean plan: files, line numbers, class/method/interface names, invariants, test strategy.
-- `up:uexecute` — Implement the plan, incremental commits, dispatch `up:explorer` when needed.
-- `up:uverify` — Checklist of what should and shouldn't hold, smoke test, loop back on failure.
-- `up:ureview` — Dispatch `up:reviewer`, fill Conclusion with outcomes and deviations.
-- `up:udocument` — Guidance for docs, CLAUDE.md, READMEs, and in-code comments.
+### Skills
+
+Process skills (u-prefixed to dodge Claude Code built-ins):
+- `up:udesign` — Brainstorm requirements, populate Design + Invariants + Principles. Record TDD yes/no with reason.
+- `up:uplan` — Concrete plan: files, line numbers, class/method names, invariants, test strategy, order. Ends with a scope/simpler-way check.
+- `up:uexecute` — Dispatch `up:implementer` per phase, incremental commits, plan-diff + consistency sweep between phases.
+- `up:uverify` — Positive + negative + invariant checklist, manual smoke test, writes summary to task file, loops back to execute on failure.
+- `up:ureview` — Dispatch `up:reviewer`, process findings fairly, fill Conclusion.
 - `up:udebug` — Four-phase root-cause investigation; no fixes without reproduction.
+- `up:udocument` — Guidance for docs, CLAUDE.md, READMEs, in-code comments.
+
+Discipline skills:
 - `up:test-driven-development` — RED → GREEN → REFACTOR, only when the task qualifies.
 - `up:data-engineering` — Sequential stages, idempotent/atomic/retriable, pre-flight checks.
 - `up:ml-experiments` — Overfit one batch, check for leaks, scale-up gated.
 - `up:git-worktrees` — Smart directory selection, safety verification.
 
-### Commands (5)
+### Commands
 
-- `/up:make` — Orchestrate the full flow: slug → task file → design → branch → plan → execute → verify → review.
-- `/up:try` — One positive + one negative check; run and report.
+- `/up:make <description>` — Orchestrate the full flow: slug → task file → design → branch → plan → execute → verify → review.
+- `/up:try` — Design one positive and one negative test case, run both, report.
 - `/up:step-back` — Circuit breaker: stop, diagnose why approaches failed, propose new direction.
-- `/up:handoff` — Session-summary for continuation.
-- `/up:reflect` — Reflect on dialogue, extract learnings into CLAUDE.md / memory / docs.
+- `/up:handoff` — Produce a handoff summary so another session can continue with zero context.
+- `/up:reflect` — Reflect on the dialogue, extract learnings into CLAUDE.md / memory / docs.
 
-### Agents (4)
+### Agents
 
-- `up:explorer` (Haiku 4.5) — Codebase tracing, file:line refs, essential-files list.
-- `up:implementer` (Sonnet 4.6) — One phase of a plan: code + tests + commit + self-review. Dispatched per-phase from `up:uexecute`. Fresh context, no session history.
-- `up:reviewer` (Sonnet 4.6) — Single-dispatch, plan-alignment-first, confidence-filtered, severity-tiered.
-- `up:researcher` (Sonnet 4.6) — General-purpose: decompose query and systematically investigate.
+- `up:explorer` (Haiku 4.5) — Codebase tracing, file:line refs, 3–5 essential files.
+- `up:implementer` (Sonnet 4.6) — One phase: code + tests + commit + self-review. Fresh context per phase.
+- `up:reviewer` (Sonnet 4.6) — Independent review against Plan + Invariants. Confidence-filtered (≥80), severity-tiered.
+- `up:researcher` (Sonnet 4.6) — General-purpose investigation: decompose + systematically answer.
 
 ## Design history
 
-See `docs/tasks/ultrapack-v1.md` for the full design spec and implementation plan.
+See `docs/tasks/ultrapack-v1.md` for the original design spec.
 
 ## License
 

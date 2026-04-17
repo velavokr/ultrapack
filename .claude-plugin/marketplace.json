@@ -1,0 +1,13 @@
+{
+  "name": "ultrapack",
+  "owner": {
+    "name": "Boris Tseitlin"
+  },
+  "plugins": [
+    {
+      "name": "up",
+      "description": "ultrapack — lean, opinionated skill pack for spec-driven, git-centered development",
+      "source": "./plugins/up"
+    }
+  ]
+}

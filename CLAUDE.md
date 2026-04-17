@@ -1,19 +1,22 @@
 # ultrapack
 
-Custom Claude Code skill pack built by merging [obra/superpowers](https://github.com/obra/superpowers) and [Anthropic feature-dev](https://github.com/anthropics/claude-code/tree/main/plugins/feature-dev).
+Claude Code plugin for spec-driven, git-centered development. Distributed as a GitHub-native marketplace: the repo root is a marketplace (`.claude-plugin/marketplace.json`) that contains one plugin, `up`, under `plugins/up/`.
 
-## Purpose
+## Repo layout
 
-Own our workflow skills instead of depending on upstream packs that update on someone else's schedule. Take the parts of superpowers and feature-dev that actually help, drop the rest, freeze the behavior.
+- `.claude-plugin/marketplace.json` — marketplace manifest (lists `up`)
+- `plugins/up/.claude-plugin/plugin.json` — plugin manifest
+- `plugins/up/{skills,commands,agents,hooks}/` — plugin contents
+- `docs/tasks/*.md` — task files (design + plan + conclusion per task)
+- `README.md`, `CLAUDE.md` — repo docs
 
-## Source material (read-only references)
+Everything under `plugins/up/` loads into Claude Code. Everything outside (`docs/`, README, CLAUDE.md) is repo-only.
 
-- `superpowers/` — full clone of obra/superpowers. Skills in `superpowers/skills/`
-- `claude-code-plugins/plugins/feature-dev/` — sparse checkout of Anthropic's feature-dev plugin (agents + commands)
+## Naming
 
-Do not modify these directories. They are upstream snapshots for reference only.
+Internal plugin name: `up`. Slash/skill invocations use the `up:` prefix: `/up:make`, `up:udesign`, `up:reviewer`. Process skills are `u`-prefixed (`udesign`, `uplan`, `uexecute`, `uverify`, `ureview`, `udebug`, `udocument`) to dodge collisions with Claude Code built-ins.
 
 ## Design principles
 
-- Fork-and-own: our skills live in this repo, not as a dependency on upstream
-- Minimal: include only skills we actually use
+- **Minimal** — only skills we actually use; no speculative additions
+- **Doc-only** — no runtime code, no unit tests; verification is install-and-invoke
