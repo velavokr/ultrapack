@@ -1,6 +1,6 @@
 # handsoff
 
-**Status:** executing
+**Status:** reviewing
 **Branch:** main
 **Worktree:** none
 **Mode:** hands-off
@@ -187,7 +187,37 @@ Phases are sequential. Phase 1 is independent of phases 2-3. Phase 2 introduces 
 - Any phase mergeable? 2+3 could merge. Not worth it for the reasons above.
 
 ## Verify
-<empty — filled by up:uverify>
+
+**Result:** passed (static checks) — see Notes for end-to-end deferral
+
+Positive:
+- `plugins/up/skills/handsoff/SKILL.md` exists with valid `name: handsoff` frontmatter → `head -5` shows correct YAML
+- `~/.claude/skills/data-engineering/SKILL.md` and `~/.claude-work/skills/data-engineering/SKILL.md` exist → `ls` output confirms both
+- `~/.claude/skills/ml-experiments/SKILL.md` and `~/.claude-work/skills/ml-experiments/SKILL.md` exist → `ls` confirms both
+- README.md:59 lists `up:handsoff` under Discipline skills → grep confirms
+- `make.md` task template includes `**Mode:**`, `### Hands-off decisions`, `### Deferred (needs user input)` → grep lines 46, 66, 69
+- `make.md:98` hands-off branch/worktree default is "dedicated branch + worktree via up:git-worktrees" → grep confirms the safety-first language
+- `make.md:126` step 11 prints the decisions list with verbatim "Here's what I did to make it hands-off. Want to change anything?" → grep confirms
+
+Negative:
+- `plugins/up/skills/data-engineering/` does NOT exist → `ls` errors "No such file or directory"
+- `plugins/up/skills/ml-experiments/` does NOT exist → same
+- `~/.claude/skills/dataset-engineering/` does NOT exist → same (superseded)
+- No instance of "default to main" or "worktree = none" as a hands-off default remains → grep on `plugins/up` returns only the pre-step-5 template placeholder (legitimate), not a mode default
+
+Invariants:
+- `plugins/up/skills/` contains no `data-engineering` or `ml-experiments` → `ls plugins/up/skills/ | grep -E ...` returns empty (PASS)
+- `/up:make` without `handsoff` keyword unchanged → diff of make.md shows only additive changes (new Hands-off blocks and frontmatter edit); interactive-mode prose untouched
+- `**Mode:**` header is the single source of truth → new `up:handsoff` skill says so explicitly; no env var / config flag introduced anywhere in the diff
+- `### Hands-off decisions` subsection exists in task template → confirmed in make.md template (line 66)
+- `up:handsoff` is referenced by make.md and all 5 child skills → grep returns 6 hits (1 per file)
+- Hands-off never invents defaults — codified in `up:handsoff` § No-default rule and propagated via references
+
+Smoke: `/up:make handsoff <desc>` cannot be run end-to-end in this session (plugin cache is stale until Claude Code reloads the plugin; the updated `up:handsoff` skill isn't in this session's loaded skill list). Deferred to user's next session post-merge.
+
+Notes:
+- This is a doc-only plugin (per CLAUDE.md: "no runtime code, no unit tests; verification is install-and-invoke"). Static file/grep/markdown checks are the in-session verification; a full hands-off run is the install-and-invoke step the user will do after merge.
+- Deviations from plan (new `up:handsoff` shared skill, safety-first branch/worktree default, extraction of duplicated sections) recorded under `## Conclusion → ### Deviations from plan`.
 
 ## Conclusion
 <empty — filled by up:ureview>
@@ -209,4 +239,4 @@ Phases are sequential. Phase 1 is independent of phases 2-3. Phase 2 introduces 
 - this task itself was executed on `main` with no worktree. Violates the new safety rule being documented. Accepted because: (a) the work is doc-only / low-blast-radius, (b) the rule didn't exist when the branch was chosen, (c) retcon would require rewriting already-shipped commits. Noted so future hands-off runs observe the rule.
 
 ### Deferred (needs user input)
-<empty — populated if any genuinely-impossible-without-user decisions were hit>
+- End-to-end smoke test of `/up:make handsoff <desc>` deferred — the updated `up:handsoff` skill and edited pack docs aren't loaded in this session's plugin cache. User should reload plugins and run a hands-off task to confirm the full flow (worktree auto-creation, decision log, end-of-task summary).

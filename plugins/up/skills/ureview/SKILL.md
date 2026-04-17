@@ -150,6 +150,10 @@ Pushback is legitimate when:
 - Skip the Conclusion write-up
 - Run review on yourself (always use the subagent — preserve independence)
 
+## Hands-off mode
+
+See `up:handsoff` for the full contract. Stage-specific delta is embedded in step 4 above: announce-and-apply without the user interjection pause; high-confidence actionable findings are fixed in-line and logged under `### Hands-off decisions`; low-confidence / ambiguous findings go to `### Deferred (needs user input)`. All applied fixes must honor the safety principles (no destructive edits, no force-push, additive over subtractive).
+
 ## Terminal state
 
 Conclusion written, all Critical/Important resolved or explicitly deferred with justification → present merge / PR / cleanup options to the user. The user chooses; you don't auto-merge.
