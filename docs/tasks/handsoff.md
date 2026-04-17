@@ -1,6 +1,6 @@
 # handsoff
 
-**Status:** reviewing
+**Status:** done
 **Branch:** main
 **Worktree:** none
 **Mode:** hands-off
@@ -220,7 +220,28 @@ Notes:
 - Deviations from plan (new `up:handsoff` shared skill, safety-first branch/worktree default, extraction of duplicated sections) recorded under `## Conclusion → ### Deviations from plan`.
 
 ## Conclusion
-<empty — filled by up:ureview>
+
+Outcome: hands-off mode now ships in the ultrapack pack. Prefix `/up:make` args with `handsoff` and the workflow runs with minimal post-Design prompts, auto-provisioning a worktree + dedicated branch (safest reversible default), logging every auto-choice, and presenting the decision list at end-of-task. The contract lives in one place (`plugins/up/skills/handsoff/SKILL.md`); each child skill references it with a stage-specific delta. The `data-engineering` and `ml-experiments` skills have been relocated out of the pack into `~/.claude/skills/` and `~/.claude-work/skills/` since they're user-global, not spec-driven-dev scoped. README reflects both changes.
+
+Plan adherence: two deviations, both mid-execute at the user's direction, both recorded under `### Deviations from plan`. (1) Safety-first worktree default replaces the original plan's `main`/`none`. (2) A new shared `up:handsoff` skill was extracted to eliminate the duplicated hands-off sections that phase 3 would have otherwise produced across five child skills.
+
+Invariants:
+- `plugins/up/skills/` contains no `data-engineering` or `ml-experiments` → verified via `ls plugins/up/skills/` (absent).
+- `/up:make` without `handsoff` keyword unchanged → verified by diff inspection: all hands-off additions are new blocks (additive), no interactive-path prose was removed.
+- `**Mode:**` header is the single source of truth → verified: no env var / config flag / in-session signal was introduced anywhere.
+- `### Hands-off decisions` exists in the task template → verified in `make.md:66`.
+- Hands-off never invents defaults — codified in `up:handsoff` § No-default rule, referenced from each child skill.
+- Hands-off safety principles (worktree-first, no destructive git ops, additive over subtractive, no auto-push) — codified in `up:handsoff` § Safety principles, referenced from `make.md` Rules and each child skill.
+
+Review findings:
+- Critical: none at ≥80 confidence.
+- Important: none at ≥80 confidence.
+- Plan-alignment nit (below reporting threshold): reviewer suggested a one-line pointer in plan §2.4 to the Deviations entry. Pushed back — `uexecute`'s rule is that the plan stays as-is for review; Deviations is the canonical location for drift. Accepting the nit would mean editing the contract after the fact and muddying the historical record. Reviewer agreed this is below their 80-threshold anyway.
+
+Future work:
+- End-to-end smoke test of `/up:make handsoff <desc>` — deferred under `### Deferred (needs user input)`. Justification: the updated skill files and pack edits aren't in this session's plugin cache (new skill cannot be loaded mid-session). User should reload plugins post-merge and run a trivial hands-off task to confirm the full flow.
+
+Verified by: static file/grep/markdown checks (see `## Verify`), independent reviewer pass (verdict: merge-ready), and manual inspection of the diff against all Invariants. Install-and-invoke smoke test deferred to post-merge per the project's doc-only plugin testing discipline.
 
 ### Hands-off decisions
 - slug: `handsoff` — literal user wording, no canonicalization to `hands-off-mode`
