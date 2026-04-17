@@ -61,9 +61,10 @@ To pick up edits mid-session (the symlink means files are live on disk), just ru
 - `/up:handoff` — Session-summary for continuation.
 - `/up:reflect` — Reflect on dialogue, extract learnings into CLAUDE.md / memory / docs.
 
-### Agents (3)
+### Agents (4)
 
 - `up:explorer` (Haiku 4.5) — Codebase tracing, file:line refs, essential-files list.
+- `up:implementer` (Sonnet 4.6) — One phase of a plan: code + tests + commit + self-review. Dispatched per-phase from `up:execute`. Fresh context, no session history.
 - `up:reviewer` (Sonnet 4.6) — Single-dispatch, plan-alignment-first, confidence-filtered, severity-tiered.
 - `up:researcher` (Sonnet 4.6) — General-purpose: decompose query and systematically investigate.
 

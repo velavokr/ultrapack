@@ -54,6 +54,9 @@ Template:
 ## Plan
 <empty — filled by up:plan>
 
+## Verify
+<empty — filled by up:verify>
+
 ## Conclusion
 <empty — filled by up:review>
 ```
@@ -148,6 +151,7 @@ Stop and ask the user when:
 - Never auto-merge or auto-push — the user chooses at step 11
 - Never create a worktree without confirming
 - Keep the task file as the single source of truth — each stage reads it, each stage writes to it
+- External spec / design docs (e.g. `docs/superpowers/specs/*.md`) are read-only during execute. If a stage finds the spec is wrong, surface it to the user — don't mutate it silently
 - Don't assume prior session memory — the next agent may be a fresh context reading only the task file
 
 ## Terminal state

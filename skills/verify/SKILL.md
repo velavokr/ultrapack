@@ -1,11 +1,11 @@
 ---
 name: verify
-description: Use after execute to confirm the change actually works end-to-end. Builds a positive + negative + invariant checklist, runs each check freshly, does a manual smoke test, loops back to execute on any failure. Does not write to the task file.
+description: Use after execute to confirm the change actually works end-to-end. Builds a positive + negative + invariant checklist, runs each check freshly, does a manual smoke test, writes a short summary to the task file's Verify section, loops back to execute on any failure.
 ---
 
 # Verify
 
-Confirm the change actually works — not "looks right", not "tests probably pass", but *verified by running the thing in this message*. Verify does not write to the task file; its verdict either advances the workflow to `up:review` or bounces it back to `up:execute` with remediation notes.
+Confirm the change actually works — not "looks right", not "tests probably pass", but *verified by running the thing in this message*. Verify's verdict either advances the workflow to `up:review` or bounces it back to `up:execute` with remediation notes. A short summary is persisted to the task file's `## Verify` section so review (and later readers) see what was checked.
 
 ## Phase 1 — Build the checklist (positive, negative, invariant)
 
@@ -59,7 +59,36 @@ Run the shortest full path that exercises the change in its real shape:
 
 If you can't run the smoke test (e.g. infra unavailable), say so explicitly. Do not fabricate success. Do not substitute a unit test for the smoke test.
 
-## Phase 4 — Consolidate: pass loops to review, fail loops to execute
+## Phase 4 — Write the Verify summary to the task file
+
+<required>
+Append (or replace) the `## Verify` section of `docs/tasks/<slug>.md`. Keep it short — this is not a transcript, it's an audit trail.
+
+Format:
+
+```markdown
+## Verify
+
+**Result:** passed | failed
+
+Positive:
+- <check> → <pass/fail + 1-line evidence>
+
+Negative:
+- <check> → <pass/fail + 1-line evidence>
+
+Invariants:
+- <invariant> → <verified how>
+
+Smoke: `<command>` → <one-line result>
+
+Notes: <anything unusual, skipped, or re-run — optional>
+```
+
+Write this whether verify passed or failed. On failure, the Notes section names what failed and points to where execute should pick up.
+</required>
+
+## Phase 5 — Consolidate: pass loops to review, fail loops to execute
 
 - All checks passed → declare verify passed. Invoke `up:review`.
 - Any check failed → for each failure, describe how it *should have* worked conceptually (not "add the missing line" — the behavior it was supposed to exhibit). Loop back to `up:execute` with these notes. Do not move forward.
@@ -105,4 +134,4 @@ If you used any of those as the basis of a pass verdict: back to Phase 1.
 
 ## Terminal state
 
-Pass → invoke `up:review`. Fail → invoke `up:execute` with failure notes describing intended behavior.
+Verify summary written to task file. Pass → invoke `up:review`. Fail → invoke `up:execute` with failure notes describing intended behavior.
