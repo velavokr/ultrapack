@@ -1,4 +1,5 @@
 tmp/
+.worktrees/
 
 # Upstream reference snapshots — not part of the pack
 superpowers/
