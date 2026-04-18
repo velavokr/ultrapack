@@ -4,11 +4,11 @@ description: Produce a summary so another session can continue with zero context
 
 # /up:summary
 
-Prepare a handoff summary so another agent session can continue this work without the current conversation. The drafting is delegated to the `summarizer` subagent (pinned to Sonnet); the main session owns only the destination choice and the file write.
+Prepare a handoff summary so another agent session can continue this work without the current conversation. The drafting is delegated to the `up:summarizer` subagent (pinned to Sonnet); the main session owns only the destination choice and the file write.
 
 ## Process
 
-### 1. Dispatch the `summarizer` subagent
+### 1. Dispatch the `up:summarizer` subagent
 
 <required>
 Drafting runs in the subagent, not in the main session. Dispatching is not optional — drafting in the main session defeats the performance motivation (main sessions typically run on Opus; the subagent runs on Sonnet).
@@ -23,7 +23,7 @@ ls -t docs/tasks/*.md 2>/dev/null | head
 The active task file is the most-recently-modified entry whose `**Status:**` header is not `done`. If none qualify, pass `null`.
 
 Dispatch via the Task tool with:
-- `subagent_type: summarizer`
+- `subagent_type: up:summarizer`
 - Working directory (absolute).
 - Active task file path, or `null`.
 
