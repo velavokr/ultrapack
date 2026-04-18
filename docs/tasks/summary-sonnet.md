@@ -1,6 +1,6 @@
 # Summary command on Sonnet
 
-**Status:** executing
+**Status:** done
 **Branch:** summary-sonnet
 **Worktree:** .worktrees/summary-sonnet
 **Mode:** hands-off
@@ -78,13 +78,42 @@ PH1 before PH2 — PH2 references the agent by name. Otherwise linear, no parall
 
 
 ## Verify
-<empty — filled by up:uverify>
+
+Doc-only change; verification is structural (install-and-invoke is a user-side smoke test deferred to post-merge).
+
+- CK1 — positive — `plugins/up/agents/summarizer.md` frontmatter includes `model: sonnet`. Check: `grep '^model: sonnet$' plugins/up/agents/summarizer.md` → pass. Preserves IV1.
+- CK2 — negative — summarizer's tool list contains no `Edit` or `Write`. Check: `grep '^tools:' plugins/up/agents/summarizer.md` → `Glob, Grep, Read, Bash` only → pass. Preserves IV2.
+- CK3 — positive — `/up:summary` dispatches the summarizer (not inline drafting). Check: `grep 'subagent_type: summarizer' plugins/up/commands/summary.md` → pass. Preserves IV1.
+- CK4 — positive — the eight-section output shape (Goal / Problem / Infrastructure / Current state / Active blocker / Key files / What to do next / Gotchas) appears in the summarizer's output spec and is referenced by `/up:summary`. Grep confirms both files name all eight sections. Preserves IV3.
+- CK5 — invariant — destination prompt (options 1 and 2) stays in `/up:summary`, not the summarizer. `grep -n 'Append to the current task file' plugins/up/commands/summary.md` returns a hit; the same phrase does not appear in the agent file. Preserves IV2.
+- CK6 — deferred — live install-and-invoke: run `/up:summary` in a real Claude Code session after merge and confirm the Task-tool dispatch shows `model: claude-sonnet-4-6` in the transcript. Cannot run from within this session (would recursively invoke the command being tested); flagged to the user at finish.
+
 
 ## Conclusion
-<empty — filled by up:ureview>
+
+Outcome: `/up:summary` now dispatches a Sonnet-pinned `summarizer` subagent for drafting; destination prompt + write stay in the main session. HEAD c1605c6.
+
+Invariants:
+- IV1 — `grep '^model: sonnet$' plugins/up/agents/summarizer.md` → match; `/up:summary` dispatches via `subagent_type: summarizer`.
+- IV2 — summarizer tools are `Glob, Grep, Read, Bash` only; no `Edit`/`Write`. Destination prompt + write live in `summary.md`, not the agent.
+- IV3 — the eight-section shape (Goal / Problem / Infrastructure / Current state / Active blocker / Key files / What to do next / Gotchas) is spelled out in the summarizer spec and referenced in the command.
+
+### Assumptions check
+- AS1 — unverifiable until a live `/up:summary` run confirms the Task dispatch reports Sonnet in the transcript. Structurally the frontmatter is correct; behavior matches the existing pattern used by `implementer`/`reviewer`/`researcher`. Flagged for post-merge smoke test (CK6).
+- AS2 — held — the summarizer spec has the subagent reconstruct state from `git` + task file + `tmp/` without any conversation handoff, and the main session passes only the task file path.
+
+### Unknowns outcome
+(none recorded at design time)
+
+Future work:
+- `plugins/up/agents/reviewer.md:3` contains dispatch-path bleed ("Dispatched from up:ureview after verify passes") per CLAUDE.md's conversation-bleed rule. Out of scope for this task — flagged by the reviewer against an untouched file. Justification: cleanup belongs to its own small task; the new `summarizer.md` description already avoids the same pattern.
+
+Verified by: structural checks CK1–CK5 (grep). Live install-and-invoke (CK6) deferred to the user post-merge — cannot run `/up:summary` from within this session without recursion.
 
 ### Hands-off decisions
 - size: Medium — default for hands-off; touches two plugin files across commands/agents boundary, more than trivial.
 - udesign: TDD=no defaulted — documentation-only change.
 - branch/worktree: `.worktrees/summary-sonnet` on branch `summary-sonnet`, resolved by the user choosing `.worktrees/` project-local. `.gitignore` updated in prereq commit on `main`.
 - uplan: plan auto-approved (hands-off).
+- ureview: reviewer flagged one Important finding against an untouched file (`reviewer.md:3` conversation bleed). Decision: deferred to Future work — out of this task's scope, not blocking.
+- upstream-cleanup: side request completed on `main` in commit 26518ec (drop `superpowers/`, `claude-code-plugins/` from `.gitignore`; retire example path in `uexecute`/`make`).
