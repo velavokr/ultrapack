@@ -16,10 +16,10 @@ Applies to anything that outlives the conversation: code, comments, docstrings, 
 
 6. **No orphan text (a.k.a. conversation bleed).** Cut anything that doesn't help the reader understand the artifact now. Usual cause: scaffolding Claude used while writing — framing, rejected alternatives, references to the task or the user's last critique. Scaffolding stays in the chat. Conversation bleed is the visible symptom; orphaning is the rule. Test: does the line earn its place by informing?
 
-   - Negative: `// do X (NOT Y)` — `Y` was the user's last critique, already removed from the code; the comment now refers to nothing.
-   - Negative: agent description "…Fresh context, never sees session history or later phases. Sonnet 4.6." — session semantics and an inlined model string are bleed; the description should say what the agent *does*.
-   - Not bleed: agent description "…Dispatched per-phase from `up:uexecute`." — naming the dispatching skill is wiring, not bleed. Claude Code reads the description to decide when to dispatch the agent; the referent is another long-lived file in the same repo, renamed atomically if it moves. Test: if the referent is a file a stranger can `grep` for, it's wiring; if the referent is a dialogue, a critique, or a transient decision, it's bleed.
-   - Negative: task file narrating the dialogue to a reader:
+   - DONT: `train_vlm_layers: 10  // train 10, NOT all` — "don't train on all" was a chat critique; once the value is 10, the comment is orphaned.
+   - DONT: agent description "…Fresh context, never sees session history or later phases. Sonnet 4.6." — session semantics and an inlined model string are orphan; the description should say what the agent *does*.
+   - DO: agent description "…Dispatched per-phase from `up:uexecute`." — naming the dispatching skill is wiring, not orphan. Claude Code reads the description to decide when to dispatch; the referent is another long-lived file, renamed atomically if it moves. Wiring test: if the referent is a file a stranger can `grep` for, keep; if it's a dialogue, critique, or transient decision, cut.
+   - DONT: task file narrating the dialogue to a reader:
 
      <bad>
      (Both resolved in design dialogue; kept here as record.)
@@ -33,8 +33,8 @@ Applies to anything that outlives the conversation: code, comments, docstrings, 
      </good>
 
      Why it's bleed: the parenthetical addresses a reader ("kept here as record") and references "the design dialogue" — a conversation that, from the file's point of view, never happened. The file is the record; it doesn't need to explain why it's the record. A stranger reading six months later sees the two resolved items and understands them on their own; the parenthetical only makes sense if you were in the chat where they were being debated.
-   - Positive: `// integer overflow here caused the 2026-02 billing incident` — timeless reason, useful in six months.
-   - Positive: agent description "Implement one phase of an approved plan — code, tests, commit." — stands alone, describes purpose.
+   - DO: `// integer overflow here caused the 2026-02 billing incident` — timeless reason, still useful after the fix.
+   - DO: agent description "Implement one phase of an approved plan — code, tests, commit." — stands alone, describes purpose.
 
 ## Checklist before saving
 
