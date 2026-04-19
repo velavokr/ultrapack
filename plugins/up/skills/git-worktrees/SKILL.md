@@ -65,7 +65,7 @@ If the worktree later changes its manifest or lockfile, replace the shared env w
 ```bash
 [ -f package.json ] && npm install
 [ -f Cargo.toml ]   && cargo build
-[ -f pyproject.toml ] && [ ! -e .venv ] && (uv sync 2>/dev/null || pip install -e .)
+[ -f pyproject.toml ] && [ ! -e .venv ] && (uv sync || pip install -e .)
 [ -f go.mod ]       && go mod download
 ```
 
