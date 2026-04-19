@@ -1,6 +1,6 @@
 # Parallel Phase Execution
 
-**Status:** planning
+**Status:** executing
 **Branch:** parallel-phase-exec
 **Worktree:** .worktrees/parallel-phase-exec
 **Mode:** hands-off
@@ -63,7 +63,71 @@ TDD: no (reason: doc-only plugin change — SKILL.md and agent markdown; no runt
 - UK3 — Resolved: `up:uplan` emits `### Execution batches` only when real parallelism exists; single-phase / obviously-sequential plans omit it. Planner owns ordering and batch composition.
 
 ## Plan
-<empty — filled by up:uplan>
+
+Approach: three independent doc edits — implementer agent gets a commit-mode input, uplan gains an optional batch-declaration subsection, uexecute gains a batched-dispatch section that ties them together. PH1 and PH2 touch disjoint files and have no dependency; PH3 references both conceptually (cross-links in prose) and lands last.
+
+### PH1 — Implementer: commit mode
+
+- **1.1** `plugins/up/agents/implementer.md:11-17` (modify) — "What you receive"
+  - Add bullet: `Commit mode: self | defer` — `self` = implementer commits (today's behavior, default). `defer` = dispatcher commits; implementer stages + tests + reports intended message.
+  - Respects: IV1, PC3
+- **1.2** `plugins/up/agents/implementer.md:21-28` (modify) — "Process"
+  - Step 6 "Commit" becomes conditional: if `commit: self`, commit as today; if `commit: defer`, stage the changed files (`git add <paths>`) and skip the commit.
+- **1.3** `plugins/up/agents/implementer.md:48-68` (modify) — "Report Format"
+  - In `commit: self` mode, report carries `Commit: <sha> <message>` as today.
+  - In `commit: defer` mode, replace the `Commit:` line with `Commit message (proposed): <one-line message>` and add `Staged files: <path>, <path>`.
+- **1.4** `plugins/up/agents/implementer.md:40-46` (modify) — "Forbidden"
+  - Add: in `commit: defer` mode, do not run `git commit`, `git reset`, or branch/tag ops; staging only.
+- Commit: `feat(implementer): add commit: self|defer mode for parallel dispatch`
+
+### PH2 — Uplan: Execution batches subsection
+
+- **2.1** `plugins/up/skills/uplan/SKILL.md:73-80` (modify) — "Required when relevant" list
+  - Add: `Execution batches: declare parallel groups and multi-phase bundles when real parallelism exists. Omit otherwise.`
+  - Respects: IV4, IV5, PC1
+- **2.2** `plugins/up/skills/uplan/SKILL.md:82-108` (modify) — Format block
+  - Append `### Execution batches (optional — omit when all phases run sequentially and alone)` with the grammar: `- B<N>: [PH<i>] || [PH<j> → PH<k>]` — `||` separates bundles that run in parallel, `→` means one implementer runs those phases sequentially.
+- **2.3** `plugins/up/skills/uplan/SKILL.md:108-118` (modify) — new subsection "When to declare batches" (insert after Format block, before Self-review)
+  - Parallelize phases only when their File structure bullets declare disjoint file paths.
+  - Bundle PH N+1 with PH N when they have a tight dependency AND the pair is small (few files, low risk).
+  - Omit the subsection when no real parallelism or bundling exists. Do not invent batches to fill space.
+  - Respects: IV2, PC1, PC4
+- **2.4** `plugins/up/skills/uplan/SKILL.md:110-118` (modify) — Self-review
+  - Add item: "If `### Execution batches` is present, every bundle's phases have disjoint file paths from every other bundle in the same batch; bundled phases have a declared dependency."
+- Commit: `feat(uplan): add optional Execution batches subsection`
+
+### PH3 — Uexecute: batched dispatch
+
+- **3.1** `plugins/up/skills/uexecute/SKILL.md:82-85` (modify) — replace the short "Parallel dispatch" paragraph in the "Dispatch per phase" section with a pointer to the new section below.
+  - Respects: IV4, IV5
+- **3.2** `plugins/up/skills/uexecute/SKILL.md:40-58` (modify) — "Per-phase loop"
+  - Reframe as "Per-batch loop". If the Plan has `### Execution batches`, iterate batches; else fall back to today's one-phase-at-a-time loop (IV5).
+  - Within a batch: verify file disjointness across bundles from the Plan's File structure; on overlap, stop and log under `### Deferred (needs user input)` (PC4).
+- **3.3** `plugins/up/skills/uexecute/SKILL.md` (insert new section, between current "Dispatch per phase" and "TDD" — ~line 86) — "Batched dispatch"
+  - Reading the batch declaration; mapping bundles to implementer dispatches; using multiple `Agent` tool calls in one response for parallel bundles; `commit: defer` for parallel bundles, `commit: self` for solo bundles and for multi-phase bundles (one implementer, sequential commits).
+  - Serialized commit protocol: await all bundles in the batch, then for each returned `DONE`/`DONE_WITH_CONCERNS` report in order of lowest PH number, run `git add <staged paths>` (if not already), `git commit -m "<proposed message>"`, then plan-diff check (IV3) and consistency pass (IV3) for that phase.
+  - Failure handling: on `BLOCKED` or `NEEDS_CONTEXT` from one bundle, wait for siblings, commit siblings' successful results, then diagnose the failure (re-dispatch, uplan, or stop). Do not abort siblings mid-work.
+  - Respects: IV1, IV2, IV3, PC2, PC4
+- **3.4** `plugins/up/skills/uexecute/SKILL.md:83-85` (modify) — "Dispatch per phase → Pass in the dispatch prompt"
+  - Add bullet: `Commit mode: self | defer` — default `self`, set `defer` only when this phase is in a parallel bundle per `### Execution batches`.
+- **3.5** `plugins/up/skills/uexecute/SKILL.md:56-57` (modify) — "Do not batch phases" sentence
+  - Replace with: "Batch only per `### Execution batches` in the Plan; never infer batches at runtime (IV4)."
+- Commit: `feat(uexecute): batched dispatch with serialized commits`
+
+### Order & dependencies
+
+- PH1 and PH2 touch disjoint files (`implementer.md` vs `uplan/SKILL.md`) with no import/data dependency.
+- PH3 touches `uexecute/SKILL.md` only, but its prose references the contracts introduced by PH1 (commit mode) and PH2 (batch subsection), so it lands after them.
+
+### Execution batches
+
+- B1: [PH1] || [PH2]
+- B2: [PH3]
+
+### Risks / rollback
+
+- RK1 — Grammar in `### Execution batches` (`||`, `→`) may be unclear to a reader at first glance; mitigated by a one-line legend in the Format block and a short "When to declare batches" section. Rollback: single commit revert on PH2.
+- RK2 — Serialized-commit protocol in parallel mode could drop an implementer's staged changes if the dispatcher crashes between `return` and `git commit`; mitigated by the dispatcher running `git add` + `git commit` back-to-back with no other operations in between. Rollback: single commit revert on PH3.
 
 ## Verify
 <empty — filled by up:uverify>
@@ -75,5 +139,6 @@ TDD: no (reason: doc-only plugin change — SKILL.md and agent markdown; no runt
 - size: Medium — default in hands-off; touches up:uexecute skill and possibly up:implementer agent, needs full design + plan
 - make: dedicated branch + worktree at .worktrees/parallel-phase-exec — hands-off safest-reversible default
 - udesign: UK3 resolved by user (only emit subsection when parallelism exists); UK1/UK2 left for planner
+- uplan: plan auto-approved (hands-off)
 
 ### Deferred (needs user input)
