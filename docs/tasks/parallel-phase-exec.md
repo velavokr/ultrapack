@@ -130,7 +130,27 @@ Approach: three independent doc edits — implementer agent gets a commit-mode i
 - RK2 — Serialized-commit protocol in parallel mode could drop an implementer's staged changes if the dispatcher crashes between `return` and `git commit`; mitigated by the dispatcher running `git add` + `git commit` back-to-back with no other operations in between. Rollback: single commit revert on PH3.
 
 ## Verify
-<empty — filled by up:uverify>
+
+Result: passed
+
+Invariants / assumptions:
+- CK1 (IV5) — serial fallback preserved when `### Execution batches` absent: `uexecute/SKILL.md:42-44`
+- CK2 (IV4) — runtime batch inference prohibited: `uexecute/SKILL.md:70, 98`
+- CK3 (IV2) — disjointness verified before batch dispatch: `uexecute/SKILL.md:52`
+- CK4 (IV1) — one commit per phase preserved: `implementer.md:29` (self) and `uexecute/SKILL.md:108-119` (defer)
+- CK5 (IV3) — plan-diff + consistency pass run per phase in both modes: `uexecute/SKILL.md:65` (serial steps 4-5) and `uexecute/SKILL.md:116-119` (batch steps c-d)
+
+Principles:
+- CK6 (PC1) — `### Execution batches` documented optional: `uplan/SKILL.md:110`
+- CK7 (PC2) — serialized-commit protocol documented: `uexecute/SKILL.md:113-120`
+- CK8 (PC3) — only new implementer input is commit mode: `implementer.md:17`
+- CK9 (PC4) — disjointness violation → Deferred, no silent fallback: `uexecute/SKILL.md:52`
+
+Cross-references:
+- CK10 — `commit: self|defer` vocabulary consistent across `implementer.md:17-30` and `uexecute/SKILL.md:83, 108-109`
+- CK11 — `### Execution batches` subsection declared in `uplan/SKILL.md:110` matches its use in `uexecute/SKILL.md:42, 98`
+
+Dogfood smoke: this task's own plan used `### Execution batches: B1: [PH1] || [PH2]; B2: [PH3]`; B1 ran as two concurrent `up:implementer` dispatches with stage-only commits, dispatcher then committed serially (b0cccf7, 7fc538b); B2 ran serially (3983b59). Full batched-dispatch flow exercised end-to-end on the task itself.
 
 ## Conclusion
 <empty — filled by up:ureview>
