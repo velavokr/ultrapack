@@ -63,7 +63,20 @@ Approach: one edit to `plugins/up/skills/git-worktrees/SKILL.md` — insert a ne
 - RK1 — Reader treats the Python example as the only supported case. Mitigation: the new section leads with the principle; the example is labeled "worked example" and extrapolation is one line below.
 
 ## Verify
-<empty — filled by up:uverify>
+
+Result: passed
+
+Positive:
+- CK1 — `## Share environment from main` section present in skill (line 44).
+- CK2 — Python worked example uses `ln -s "$main/.venv" .venv` with `$main` resolved via `git worktree list --porcelain` (absolute path).
+- CK3 — Extrapolation line names `node_modules`, `vendor/bundle`, `target`, and calls out Go / Gradle as globally shared.
+- CK4 — Follow-up note instructs `rm .venv && uv sync` when deps diverge.
+
+Invariants / assumptions:
+- CK5 (IV1) — Symlink target is absolute; smoke test shows `/Users/.../smoke/.venv` as the link target.
+- CK6 (IV2) — `[ ! -e .venv ]` guard present in both the share block (line 52) and baseline pyproject line (line 68); second run of the snippet did not overwrite the existing symlink.
+
+Smoke: ran the documented snippet in a throwaway repo (gitignored `.venv` in main, fresh worktree): `readlink .venv` → absolute path to main's `.venv`; re-running the snippet left the symlink untouched.
 
 ## Conclusion
 <empty — filled by up:ureview>
