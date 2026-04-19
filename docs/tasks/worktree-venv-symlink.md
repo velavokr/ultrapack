@@ -1,6 +1,6 @@
 # Worktree environment sharing
 
-**Status:** executing
+**Status:** done
 **Branch:** worktree-venv-symlink
 **Worktree:** .worktrees/worktree-venv-symlink
 **Mode:** hands-off
@@ -79,12 +79,26 @@ Invariants / assumptions:
 Smoke: ran the documented snippet in a throwaway repo (gitignored `.venv` in main, fresh worktree): `readlink .venv` → absolute path to main's `.venv`; re-running the snippet left the symlink untouched.
 
 ## Conclusion
-<empty — filled by up:ureview>
+
+Outcome: `git-worktrees` skill now documents sharing the main repo's environment into a new worktree (Python as worked example, extrapolation to other stacks); 27b43c8, 71cc211.
+
+Invariants:
+- IV1 — Symlink example uses absolute path via `$(git worktree list --porcelain | awk '/^worktree / {print $2; exit}')`; smoke test confirmed absolute target.
+- IV2 — `[ ! -e .venv ]` guard in both the share block and baseline pyproject line; idempotency smoke confirmed.
+
+### Assumptions check
+- AS1 — held (unverified beyond the common case): worktrees of the same repo share the parent's interpreter pin.
+- AS2 — held by construction: `git worktree add` from a clean main branches off HEAD, so manifests match at creation.
+- AS3 — documented as guidance in the skill; enforcement is on the user.
+
+Review findings:
+- Important — baseline pyproject line silenced `uv sync` errors via `2>/dev/null`, violating PC2. Fixed in 71cc211 by dropping the redirect; `|| pip install -e .` alternation retained since it's a try-uv-else-pip path, not a silenced failure.
 
 ### Hands-off decisions
 - make: size=Medium — hands-off default; skill edit plus doc sweep.
 - udesign: symlink-by-default at create-time, local install only if deps diverge later — rationale: user guidance "symlink if deps don't change, else create local env"; at create-time deps are identical by definition.
 - udesign: general principle + one worked example, not an ecosystem table — rationale: user guidance "symlink/uv sync is a special case; with different langs do the analogous in your stack".
 - uplan: plan auto-approved (hands-off).
+- ureview: fixed Important — dropped `2>/dev/null` from baseline pyproject line to honor PC2.
 
 ### Deferred (needs user input)
