@@ -41,12 +41,31 @@ git worktree add "$path" -b "<branch-name>"
 cd "$path"
 ```
 
+## Share environment from main
+
+At creation, a fresh worktree has no project environment — tools that resolve deps via ancestor walks (LSPs, language resolvers) either emit bogus diagnostics or reinstall from scratch. Avoidable: at this moment the worktree's deps are identical to the parent's (same commit base, same manifest). Share the main repo's environment into the worktree. Rebuild locally only if deps later diverge.
+
+Worked example — Python (uv / venv):
+
+```bash
+main=$(git worktree list --porcelain | awk '/^worktree / {print $2; exit}')
+if [ -f pyproject.toml ] && [ ! -e .venv ] && [ -d "$main/.venv" ]; then
+  ln -s "$main/.venv" .venv
+fi
+```
+
+Absolute symlink target so the link survives nested worktree paths. The `! -e .venv` guard means an existing real env or symlink is never overwritten. If main has no `.venv`, skip — baseline setup below falls through to the install command.
+
+For other stacks, do the analogous share-from-main (`node_modules`, `vendor/bundle`, `target`, …). Go and Gradle share caches globally (`$GOMODCACHE`, `~/.gradle`) — nothing to link.
+
+If the worktree later changes its manifest or lockfile, replace the shared env with a local install (e.g. `rm .venv && uv sync`). The skill doesn't detect this; it's guidance for whoever edits deps.
+
 ## Baseline setup — auto-detect and run
 
 ```bash
 [ -f package.json ] && npm install
 [ -f Cargo.toml ]   && cargo build
-[ -f pyproject.toml ] && (uv sync 2>/dev/null || pip install -e .)
+[ -f pyproject.toml ] && [ ! -e .venv ] && (uv sync 2>/dev/null || pip install -e .)
 [ -f go.mod ]       && go mod download
 ```
 
