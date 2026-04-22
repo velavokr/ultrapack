@@ -121,7 +121,7 @@ Approach: <1-2 sentences>
 ## When to declare interfaces
 
 - An interface is a cross-phase contract: a function/method signature, a shared SKILL.md section anchor, or any API shape that one phase produces and another phase consumes.
-- The consume arrow (`IF<N> ->`) means runtime coupling — one phase's output is the other phase's input. Doc-only phases that merely reference a prior phase's plan text are sources, not consumers; use `(source)` and omit the `->` consume side.
+- The consume arrow (`IF<N> ->`) means runtime coupling — one phase's output is the other phase's input. Doc-only phases that merely reference a prior phase's plan text are sources, not consumers; leave the consume side empty (the line starts with `PH<N>  -> <produces>`).
 - `@ <paths>` marks the filesystem boundary for each phase. Paths declared by phases in the same wave must be disjoint; `up:uexecute` uses this to detect boundary violations after each commit.
 - Waves are derived from the graph — phases with no unconsumed dependencies can run in parallel. Do not hand-declare waves; declare the graph and let the executor derive them.
 - Omit both `### Interfaces` and `### Interface graph` for single-phase plans.

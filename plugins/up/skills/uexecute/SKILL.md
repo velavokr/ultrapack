@@ -80,9 +80,7 @@ Each phase runs in a fresh `up:implementer` subagent (Sonnet 4.6). You (the disp
 - Absolute working directory (subagents do not inherit `cwd` reliably across harnesses)
 - Expected git branch (from task file `**Branch:**` header)
 - `Commit mode: self | defer` — `self` for solo-phase or serial-fallback dispatch; `defer` when the phase is in a multi-phase wave per `### Interface graph`
-- `Owns: <paths>` — verbatim from the phase's `@` list in `### Interface graph` (IF3)
-- `Implements: <IFs>` — IFs on the right side of the phase's `->` arrow (IF3)
-- `Consumes: <IFs>` — IFs on the left side of the phase's `->` arrow (IF3)
+- `Owns`, `Implements`, `Consumes` — only when the plan has `### Interface graph`; see "Wave dispatch" below for how they're sourced and passed
 
 **Do not pass:**
 - Session history or prior-phase chatter
