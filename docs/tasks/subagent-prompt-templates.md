@@ -1,6 +1,6 @@
 # Subagent prompt templates
 
-**Status:** planning
+**Status:** done
 **Branch:** main
 **Worktree:** none
 **Mode:** interactive
@@ -87,7 +87,7 @@ Approach: insert a labeled-field fenced code block (skeleton) immediately after 
 
 Invariants / assumptions:
 - CK1 (IV1) — `grep "Dispatch prompt skeleton" plugins/up/agents/*.md` → empty; skeletons live only in dispatching skills/commands
-- CK2 (IV2) — every field in each skill's "Pass in the dispatch prompt" bullet list maps to a labeled line in its skeleton (implementer 8/8, reviewer 4/3, summarizer 3/3)
+- CK2 (IV2) — every field in each skill's "Pass in the dispatch prompt" bullet list maps to a labeled line in its skeleton (implementer: Phase/IV/PC/AS/TDD/cwd/Branch/Commit mode; reviewer: Task file/BASE_SHA/HEAD_SHA/cwd; summarizer: cwd/Distinctive phrases/Active task file)
 - CK3 (IV3) — all skeletons use `<...>` placeholders inside fenced blocks, no JSON schema
 
 Positive:
@@ -96,7 +96,22 @@ Positive:
 Smoke: doc-only change, no runtime to exercise
 
 ## Conclusion
-<empty — filled by up:ureview>
+
+Outcome: five dispatch prompt skeletons added across uexecute, ureview, summary command; last commit 1c2fc88.
+
+Invariants:
+- IV1 — `grep "Dispatch prompt skeleton" plugins/up/agents/*.md` → empty
+- IV2 — each skill's required-fields list maps to labeled skeleton lines (see Verify CK2)
+- IV3 — all skeletons use `<...>` placeholders inside fenced blocks
+
+### Assumptions check
+- AS1 — unverifiable until the next real dispatch — skeletons are in place; whether Opus follows them over improvising is observed only when uexecute/ureview/summary next run
+
+### Unknowns outcome
+- UK1 — resolved: fields mirror each agent's "What you receive" order, not standardized cross-agent
+
+Review findings:
+- Important: reviewer flagged misleading coverage ratio "4/3" in Verify CK2 — fixed by replacing ratios with explicit field lists
 
 ### Deviations from plan
 - Skeleton heading style: used bold `**Dispatch prompt skeleton**` instead of plan's `### Dispatch prompt skeleton`. Reason: ureview and summary command use numbered `### N. Step name` subheadings; inserting a new `###` would break their numeric flow. Bold label fits all three files uniformly.
