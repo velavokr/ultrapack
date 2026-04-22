@@ -182,7 +182,36 @@ All four phases are sources in the interface graph (no `Consumes`). They share n
 Per design AS6: all `docs/tasks/*.md` in this repo are `done`; no in-flight task uses `### Execution batches`. PH1 removes the grammar from the Format; PH3 removes the code path that dispatched by batch. External users' plans with old grammar execute via the serial fallback (IV6) because `### Interface graph` is absent — they do not crash, just run serially. One-line mention in README docs-refresh after review.
 
 ## Verify
-<empty — filled by up:uverify>
+
+**Result:** passed
+
+Positive:
+- CK1 — `### Interfaces` and `### Interface graph` subsections documented in `uplan/SKILL.md:111, 115` with the grammar `- IF<N> — <signature> — <contract>` and `PH<N>  <consumes> -> <produces>   @ <paths>`.
+- CK2 — Topo-sort wave derivation described in `uexecute/SKILL.md:42, 106-109` (source phases form wave 1; wave N+1 consumes are produced by 1..N).
+- CK3 — Boundary check documented in `uexecute/SKILL.md:124` (`git show <sha> --name-only` ⊆ `@` set; halt on trespass).
+- CK4 — Wiring check documented in `uexecute/SKILL.md:135-146` (per-IF grep + signature/anchor match).
+- CK5 — `up:implementer` accepts `Owns` / `Implements` / `Consumes` at `implementer.md:17-19`.
+- CK6 — `up:uverify` Phase 1 Interfaces (CK) category at `uverify/SKILL.md:25`; Phase 4 Format Interfaces block at `:99-101`.
+
+Negative:
+- CK7 — No references to `### Execution batches`, `Batched dispatch`, "multi-phase bundle", or `||`/`→` batch grammar anywhere under `plugins/up/`.
+
+Invariants / assumptions:
+- CK8 (IV6) — Serial fallback preserved: `uexecute/SKILL.md:42, 44` dispatch serially when `### Interface graph` absent.
+- CK9 (IV7) — One commit per phase: `uexecute/SKILL.md:122-123` (dispatcher commits per phase in wave), `implementer.md:32` (one commit per `commit: self` phase).
+
+Interfaces:
+- CK10 (IF1) — `### Interfaces` grammar: `uplan:112-113` defines; `uverify:25` and `uexecute:140` reference it by name; shapes consistent.
+- CK11 (IF2) — `### Interface graph` grammar: `uplan:116-118` defines; `uexecute:104` parses same grammar; example corrected in c762c10 (removed double-arrow typo).
+- CK12 (IF3) — Implementer dispatch-input contract: `implementer.md:17-20` declares `Owns`/`Implements`/`Consumes`/`commit mode`; `uexecute:82-85` passes the same four fields — field names match exactly.
+- CK13 (IF4) — Wave dispatch protocol: `uexecute:99-133` (parse graph → derive waves → disjointness → concurrent `Agent` calls → serialized commits).
+- CK14 (IF5) — Boundary check protocol: `uexecute:124` (`git show <sha> --name-only` subset check, halt on trespass).
+- CK15 (IF6) — Wiring check protocol: `uexecute:135-146` (per-IF grep of callers/anchors, signature match, mismatch → Deviations from plan).
+- CK16 (IF7) — Verify-checklist rule: `uverify:25` new category; `uverify:99-101` Format template.
+
+Dogfood smoke: the task's own plan declared `### Interface graph` with 4 source phases (PH1-PH4, pairwise-disjoint `@` paths); executor derived wave-1, verified disjointness, dispatched 4 concurrent `up:implementer` agents with `commit: defer`, then serialized commits in PH order — 38c2cf7 (PH1 uplan) → 37d1432 (PH2 implementer) → 6ba3b9d (PH3 uexecute) → 364c8ea (PH4 uverify). Boundary check per commit: each diff ⊆ its declared `@` (confirmed via `git show --name-only`). Wiring check across the final tree: IF1/IF2/IF3 cross-file references consistent; grammar example fix (c762c10) landed during verify. Full new workflow end-to-end on itself.
+
+Notes: one inline verify fix — the `### Interface graph` example in `uplan/SKILL.md` had a double `->` typo and a `(source)` literal that wasn't part of the grammar; fixed in c762c10 (see CK11).
 
 ## Conclusion
 <empty — filled by up:ureview>
