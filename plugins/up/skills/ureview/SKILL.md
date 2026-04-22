@@ -51,6 +51,15 @@ Dispatch the `up:reviewer` agent with:
 Do **not** pass session history to the reviewer. The reviewer must not see the rationale behind changes — only the Plan, Invariants, and diff. Independence is the point.
 </system-reminder>
 
+**Dispatch prompt skeleton** (guidance):
+
+```
+Task file: <docs/tasks/<slug>.md>
+BASE_SHA: <merge-base with main, or branch point>
+HEAD_SHA: <current HEAD>
+Working directory: <absolute path>
+```
+
 ### 2. Read feedback without reacting
 
 Receive the reviewer's output. Do not immediately reply with fixes or pushback. Classify first:
