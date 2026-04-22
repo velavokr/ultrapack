@@ -89,6 +89,19 @@ Each phase runs in a fresh `up:implementer` subagent (Sonnet 4.6). You (the disp
 - Rationale behind design decisions — the plan is the contract
 </required>
 
+**Dispatch prompt skeleton** (guidance — fill the fields, skip sections that don't apply):
+
+```
+Phase: <verbatim PHN text from ## Plan>
+Invariants: <IV1, IV2, ...>
+Principles: <PC1, PC2, ...>
+Assumptions: <AS1, AS2, ...>
+TDD: <yes | no (reason)>
+Working directory: <absolute path>
+Branch: <expected branch from task file header>
+Commit mode: <self | defer>
+```
+
 **When to skip dispatch and do it inline:**
 - Trivial phase (typo, one-line import fix, changelog edit)
 - Phase needs mid-work interactive user input
@@ -139,6 +152,29 @@ If `TDD: no`, skip the test-first loop; verification happens in `up:uverify`.
 - You need a ranked list of essential files for a feature
 
 Dispatch with tight scope and pass the working directory explicitly. Don't over-use — inline Grep/Read beats a subagent for one-shot lookups.
+
+**Dispatch prompt skeleton:**
+
+```
+Scope: <what to trace — feature name, entry point, or specific question>
+Working directory: <absolute path>
+```
+
+## When to dispatch `up:researcher`
+
+- You need external info: library docs beyond a quick Context7 lookup, how other projects solve a problem, SOTA landscape, cross-source tradeoffs
+- The question spans web + library docs + current codebase and needs synthesis
+
+If the question is purely about the current codebase, prefer `up:explorer`. If it's a single doc lookup, inline Context7 is enough.
+
+**Dispatch prompt skeleton:**
+
+```
+Question: <the research question, in the shape you want the answer to take>
+Sub-questions: <optional — pre-decomposed bullets if you already know the shape>
+Working directory: <absolute path, if codebase context is relevant>
+Scope hints: <optional — preferred sources, depth, time budget>
+```
 
 ## Consistency pass — when changing a pattern, sweep for others
 
