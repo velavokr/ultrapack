@@ -90,7 +90,8 @@ Discipline skills:
 ### Agents
 
 - `up:explorer` (Haiku 4.5) — Codebase tracing, file:line refs, 3–5 essential files.
-- `up:implementer` (Sonnet 4.6) — One phase: code + tests + commit + self-review. Receives `Owns` / `Implements` / `Consumes` from the plan's interface graph. `commit: self|defer` mode; defer stages only and the dispatcher commits (used in parallel waves). Fresh context per dispatch.
+- `up:implementer` (Opus 4.7) — Default implementer for complex phases (multi-file, new logic, TDD, interface changes). One phase: code + tests + commit + self-review. Receives `Owns` / `Implements` / `Consumes` from the plan's interface graph. `commit: self|defer` mode; defer stages only and the dispatcher commits (used in parallel waves). Fresh context per dispatch.
+- `up:implementer-sonnet` (Sonnet 4.6) — Same procedure as `up:implementer` but on Sonnet for trivial phases (typos, one-line fixes, mechanical renames, doc/copy edits, lint/import cleanup). Bounces non-trivial work back with `escalate: up:implementer`.
 - `up:reviewer` (Sonnet 4.6) — Independent review against Plan + Invariants + Assumptions. Confidence-filtered (≥80), severity-tiered.
 - `up:researcher` (Sonnet 4.6) — General-purpose investigation: decompose + systematically answer.
 - `up:summarizer` (Sonnet 4.6) — Drafts the handoff prose for `/up:summary`; gathers repo state, never writes to disk.

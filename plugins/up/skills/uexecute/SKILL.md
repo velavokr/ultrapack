@@ -1,11 +1,11 @@
 ---
 name: uexecute
-description: Use to implement an approved plan. Dispatches the up:implementer agent per phase on Sonnet 4.6. Runs plan-diff check and consistency sweep after each phase. Forbids silent fallbacks and mutation of external spec/design docs. Dispatches the planner skill when deviations invalidate the plan.
+description: Use to implement an approved plan. Dispatches `up:implementer` (Opus, default) or `up:implementer-sonnet` (Sonnet, trivial phases) per phase. Runs plan-diff check and consistency sweep after each phase. Forbids silent fallbacks and mutation of external spec/design docs. Dispatches the planner skill when deviations invalidate the plan.
 ---
 
 # Execute
 
-Implement the approved `## Plan` from `docs/tasks/<slug>.md`. You are the dispatcher — each phase is handed to a fresh `up:implementer` subagent. After each phase returns, you run the plan-diff check and consistency pass before moving on. The goal is a working change that honors Design and Plan.
+Implement the approved `## Plan` from `docs/tasks/<slug>.md`. You are the dispatcher — each phase is handed to a fresh implementer subagent (`up:implementer` by default; `up:implementer-sonnet` for trivial phases — see "Choosing the implementer agent" below). After each phase returns, you run the plan-diff check and consistency pass before moving on. The goal is a working change that honors Design and Plan.
 
 ## Before starting
 
@@ -70,7 +70,20 @@ Parallelism comes only from the Plan's `### Interface graph` via the wave schedu
 
 ## Dispatch per phase
 
-Each phase runs in a fresh `up:implementer` subagent (Sonnet 4.6). You (the dispatcher, on Opus) coordinate.
+Each phase runs in a fresh implementer subagent. You (the dispatcher, on Opus) coordinate.
+
+### Choosing the implementer agent
+
+<required>
+Two implementer agents are available:
+
+- `up:implementer` (Opus) — default. Use for any phase requiring judgment: multi-file changes, new logic, TDD, introducing or changing an interface, anything where reading multiple files informs the implementation.
+- `up:implementer-sonnet` (Sonnet) — trivial phases only. Use when the phase is unambiguously mechanical and well-localized: single-file typo or copy fix, mechanical rename, import/lint cleanup, version/changelog bump, doc edit with no behavioral claims.
+
+Default to `up:implementer`. Pick `up:implementer-sonnet` only when every criterion is met. If unsure, pick `up:implementer`.
+
+If `up:implementer-sonnet` returns `NEEDS_CONTEXT` with `escalate: up:implementer`, re-dispatch the same phase to `up:implementer` — its scope check correctly bounced a non-trivial phase.
+</required>
 
 <required>
 **Pass in the dispatch prompt:**
@@ -126,7 +139,7 @@ Parse each line of the form `PH<N>  <consumes-CSV> -> <produces-CSV>   @ <paths-
 Before dispatching a wave, verify that the `@` sets of all phases in that wave are pairwise disjoint. On overlap: halt, log the conflicting paths under `### Deferred (needs user input)`, do not dispatch.
 
 **Dispatching a wave:**
-Fire one `up:implementer` per phase in the wave as concurrent `Agent` tool calls in a single response (AS1). Pass `commit: defer` to each (AS3 — only the dispatcher touches git in defer mode). Include `Owns`, `Implements`, `Consumes` from the graph line (IF3).
+Fire one implementer per phase in the wave as concurrent `Agent` tool calls in a single response (AS1). Choose `up:implementer` or `up:implementer-sonnet` per phase using "Choosing the implementer agent" above. Pass `commit: defer` to each (AS3 — only the dispatcher touches git in defer mode). Include `Owns`, `Implements`, `Consumes` from the graph line (IF3).
 
 **Serialized commit protocol:**
 After all `Agent` calls in the response return, process successful implementers in ascending PH order:
