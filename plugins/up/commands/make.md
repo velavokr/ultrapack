@@ -84,7 +84,7 @@ Based on the task description, classify size:
 - Small — single file or single concept change. Skip Design. Plan runs.
 - Medium / Large — full flow.
 
-Interactive mode: confirm the classification with the user before skipping any stage. When unsure, ask.
+Interactive mode: default to Medium silently. Jump to Trivial/Small only when the user's wording signals it — e.g. "quickly", "fast", "just", "one-line", "typo", "rename". Confirm before skipping any stage. When genuinely ambiguous, ask.
 
 Hands-off mode: do not confirm. Default to Medium (full flow) unless the scope is unambiguously Trivial (true one-liner in one file). Never auto-pick Small or auto-skip Design — Design is the one interactive stage preserved in hands-off. Append the choice to `## Conclusion → ### Hands-off decisions` as `- size: <classification> — <rationale>`.
 
